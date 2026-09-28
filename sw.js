@@ -1,47 +1,87 @@
-// Service worker ÔZAnnonces — met en cache uniquement la coque de l'app (/app/).
-// Il ne touche JAMAIS aux appels api_*.php ni aux images : les données de session
-// et les annonces restent toujours lues sur le serveur.
-const CACHE = 'oz-app-v1'; // changez ce numéro pour forcer une mise à jour du cache
-const SHELL = ['./', 'index.html', 'manifest.webmanifest',
-               'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
+// Service worker ÔZAnnonces
+const CACHE = 'oz-app-v2';
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+const SHELL = [
+  './',
+  'index.html',
+  'manifest.webmanifest',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'icons/icon-maskable-512.png',
+  'icons/apple-touch-icon.png'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache => cache.addAll(SHELL))
+      .then(() => self.skipWaiting())
+  );
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
+self.addEventListener('activate', event => {
+  event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key => key !== CACHE)
+            .map(key => caches.delete(key))
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin !== location.origin) return;        // sites tiers (geo.api.gouv.fr…)
-  if (!url.pathname.startsWith('/app/')) return;     // api_*.php, images, site : jamais interceptés
+self.addEventListener('fetch', event => {
+  const req = event.request;
 
-  // Page de l'app : réseau d'abord (mises à jour immédiates), cache si hors ligne
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Ne gérer que notre propre domaine
+  if (url.origin !== location.origin) return;
+
+  // Notre application est dans /ozannonces-pwa/
+  if (!url.pathname.startsWith('/ozannonces-pwa/')) return;
+
+  // Page principale : réseau d'abord, cache hors ligne
   if (req.mode === 'navigate') {
-    e.respondWith(
+    event.respondWith(
       fetch(req)
-        .then(res => {
-          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put('index.html', copy)); }
-          return res;
+        .then(response => {
+          if (response.ok) {
+            const copy = response.clone();
+
+            caches.open(CACHE)
+              .then(cache => cache.put('index.html', copy));
+          }
+
+          return response;
         })
         .catch(() => caches.match('index.html'))
     );
+
     return;
   }
 
-  // Icônes / manifeste : cache d'abord
-  e.respondWith(
-    caches.match(req).then(hit => hit || fetch(req).then(res => {
-      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
-      return res;
-    }))
+  // Manifest, icônes et autres fichiers statiques
+  event.respondWith(
+    caches.match(req)
+      .then(cached => {
+        if (cached) return cached;
+
+        return fetch(req).then(response => {
+          if (response.ok) {
+            const copy = response.clone();
+
+            caches.open(CACHE)
+              .then(cache => cache.put(req, copy));
+          }
+
+          return response;
+        });
+      })
   );
 });
