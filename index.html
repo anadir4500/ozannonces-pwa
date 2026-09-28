@@ -260,8 +260,9 @@ input,select,textarea{font-size:16px !important;}   /* évite le zoom automatiqu
 
 <script>
 // PWA hébergée sur GitHub Pages : l'API tourne sur un autre domaine (le vrai backend PHP).
-// ⚠️ Remplace la valeur ci-dessous par le nom de domaine réel de ton site/backend.
-const API_BASE = 'https://ozannonces.fr';
+// www. est obligatoire : ozannonces.fr (sans www) redirige (301) vers www.ozannonces.fr,
+// et cette redirection casse le CORS — on appelle donc directement la bonne adresse.
+const API_BASE = 'https://www.ozannonces.fr';
 
 // Icône + libellé lisible pour chaque catégorie (clé = slug renvoyé par l'API)
 const CAT_META = {
