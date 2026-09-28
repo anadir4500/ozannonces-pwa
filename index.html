@@ -332,31 +332,63 @@ function filterByCategory(categoryId){
 
 let lastAds = []; // annonces actuellement affichées (pour ouvrir le détail par index)
 
+// État de pagination par liste ('homeList' ou 'fullList') : catégorie en cours,
+// page déjà chargée, nombre total d'annonces côté serveur, et les annonces
+// cumulées jusqu'ici (nécessaire pour que "Voir plus" ajoute à la suite au
+// lieu de tout recharger depuis le début).
+const listState = {};
+
 async function loadListings(categoryId, targetId){
   const el = document.getElementById(targetId);
   el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Chargement des annonces…</p>';
+  listState[targetId] = { categoryId, page: 1, total: 0, items: [] };
   try{
-    let url = API_BASE + '/api_listings.php?';
-    if(categoryId) url += 'category_id=' + categoryId;
+    let url = API_BASE + '/api_listings.php?page=1';
+    if(categoryId) url += '&category_id=' + categoryId;
     const res = await fetch(url);
     const data = await res.json();
     if(!data.success) throw new Error('Réponse invalide');
-    lastAds = data.listings;
+    const st = listState[targetId];
+    st.items = data.listings;
+    st.total = data.total || data.listings.length;
+    lastAds = st.items;
     if(lastAds[0]) console.debug('Exemple image annonce :', lastAds[0].image);
-    renderList(targetId, data.listings);
+    renderList(targetId, st.items, st.total);
   }catch(e){
     console.warn('Annonces indisponibles', e);
     el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Impossible de charger les annonces pour le moment.</p>';
   }
 }
 
-function renderList(targetId, list){
+async function loadMoreListings(targetId){
+  const st = listState[targetId];
+  if(!st) return;
+  const btn = document.getElementById('more-' + targetId);
+  if(btn){ btn.disabled = true; btn.textContent = 'Chargement…'; }
+  try{
+    let url = API_BASE + '/api_listings.php?page=' + (st.page + 1);
+    if(st.categoryId) url += '&category_id=' + st.categoryId;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!data.success) throw new Error('Réponse invalide');
+    st.page += 1;
+    st.items = st.items.concat(data.listings);
+    st.total = data.total || st.total;
+    lastAds = st.items;
+    renderList(targetId, st.items, st.total);
+  }catch(e){
+    console.warn('Chargement de la suite impossible', e);
+    if(btn){ btn.disabled = false; btn.textContent = 'Réessayer'; }
+  }
+}
+
+function renderList(targetId, list, total){
   const el = document.getElementById(targetId);
   if(!list.length){
     el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Aucune annonce pour l\'instant.</p>';
     return;
   }
-  el.innerHTML = list.map((a,i)=>{
+  const cards = list.map((a,i)=>{
     const m = metaFor(a.category_slug);
     const priceTxt = (a.price === null || a.price === 0) ? 'Prix non précisé' : (Math.round(a.price) + ' ' + (a.currency||'€'));
     const thumbInner = a.image
@@ -374,6 +406,13 @@ function renderList(targetId, list){
       </div>
     </div>`;
   }).join('');
+
+  const hasMore = typeof total === 'number' && list.length < total;
+  const moreBtn = hasMore
+    ? `<button id="more-${targetId}" class="btn ghost" style="margin-top:14px;" onclick="loadMoreListings('${targetId}')">Voir plus d'annonces</button>`
+    : '';
+
+  el.innerHTML = cards + moreBtn;
 }
 
 /* ---------------- ÉTAT DE CONNEXION GLOBAL ---------------- */
