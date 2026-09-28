@@ -259,7 +259,9 @@ input,select,textarea{font-size:16px !important;}   /* évite le zoom automatiqu
 </div>
 
 <script>
-const API_BASE = window.location.origin; // PWA hébergée sur le même domaine que le site
+// PWA hébergée sur GitHub Pages : l'API tourne sur un autre domaine (le vrai backend PHP).
+// ⚠️ Remplace la valeur ci-dessous par le nom de domaine réel de ton site/backend.
+const API_BASE = 'https://ozannonces.fr';
 
 // Icône + libellé lisible pour chaque catégorie (clé = slug renvoyé par l'API)
 const CAT_META = {
