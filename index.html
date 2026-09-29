@@ -203,7 +203,8 @@ nav button.active{color:var(--orange-dark);}
 
   <!-- ACCUEIL -->
   <div class="screen active" id="s-accueil">
-    <div class="search"><span>🔍</span><input placeholder="Que recherchez-vous ?"></div>
+    <div class="search"><span>🔍</span><input id="homeQ" placeholder="Que recherchez-vous ?" enterkeyhint="search">
+  <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doHomeSearch()">Rechercher</button></div>
     <div class="cats" id="catsGrid"></div>
     <div class="banner">
       <b>Une seconde vie pour vos objets 🌿</b>
@@ -213,11 +214,18 @@ nav button.active{color:var(--orange-dark);}
     <div class="ad-list" id="homeList"></div>
   </div>
 
+   
   <!-- ANNONCES -->
-  <div class="screen" id="s-annonces">
-    <div class="chips" id="chipsRow"></div>
-    <div class="ad-list" id="fullList"></div>
+<div class="screen" id="s-annonces">
+  <div class="search" style="margin-bottom:10px;">
+    <span>🔍</span><input id="fltQ" placeholder="Rechercher une annonce…" enterkeyhint="search">
+    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doSearch()">OK</button>
+    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="openFilters()">⚙️ Filtres<span id="fltBadge"></span></button>
   </div>
+  <div id="fltSummary" style="font-size:12.5px;color:var(--muted);margin:0 2px 10px;"></div>
+  <div class="chips" id="chipsRow"></div>
+  <div class="ad-list" id="fullList"></div>
+</div>
 
   <!-- DÉPOSER -->
   <div class="screen" id="s-deposer">
@@ -336,9 +344,10 @@ function renderChips(){
 
 function filterByCategory(categoryId){
   currentCategoryId = categoryId;
+  searchFilters.subId = null; searchFilters.subLabel = ''; searchFilters.type = '';
+  runSearch();
   go('annonces');
   renderChips();
-  loadListings(categoryId, 'fullList');
 }
 
 let lastAds = []; // annonces actuellement affichées (pour ouvrir le détail par index)
@@ -354,8 +363,7 @@ async function loadListings(categoryId, targetId){
   el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Chargement des annonces…</p>';
   listState[targetId] = { categoryId, page: 1, total: 0, items: [] };
   try{
-    let url = API_BASE + '/api_listings.php?page=1';
-    if(categoryId) url += '&category_id=' + categoryId;
+    const url = buildUrl(targetId, 1, categoryId);
     const res = await fetch(url);
     const data = await res.json();
     if(!data.success) throw new Error('Réponse invalide');
@@ -377,8 +385,7 @@ async function loadMoreListings(targetId){
   const btn = document.getElementById('more-' + targetId);
   if(btn){ btn.disabled = true; btn.textContent = 'Chargement…'; }
   try{
-    let url = API_BASE + '/api_listings.php?page=' + (st.page + 1);
-    if(st.categoryId) url += '&category_id=' + st.categoryId;
+    const url = buildUrl(targetId, st.page + 1, st.categoryId);
     const res = await fetch(url);
     const data = await res.json();
     if(!data.success) throw new Error('Réponse invalide');
@@ -456,6 +463,7 @@ function go(name){
   document.getElementById('s-'+name).classList.add('active');
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.s===name));
   if(name==='profil') loadProfil();
+  if(name==='annonces' && !listState.fullList) runSearch();
   if(name==='deposer') updateDeposerGate();
 }
 
@@ -1195,6 +1203,195 @@ async function submitProDemande(){
     msg.textContent = 'Erreur réseau.';
     btn.disabled = false; btn.textContent = 'Envoyer ma demande';
   }
+}
+
+/* ---------- FILTRES DE RECHERCHE ---------- */
+const searchFilters = { q:'', city:'', priceMin:'', priceMax:'', type:'', subId:null, subLabel:'' };
+
+function buildUrl(targetId, page, categoryId){
+  if(targetId === 'homeList'){
+    let u = API_BASE + '/api_listings.php?page=' + page;
+    if(categoryId) u += '&category_id=' + categoryId;
+    return u;
+  }
+  const f = searchFilters, p = new URLSearchParams({ page });
+  if(categoryId)  p.set('category_id', categoryId);
+  if(f.subId)     p.set('subcategory_id', f.subId);
+  if(f.q)         p.set('q', f.q);
+  if(f.city)      p.set('city', f.city);
+  if(f.priceMin !== '') p.set('price_min', f.priceMin);
+  if(f.priceMax !== '') p.set('price_max', f.priceMax);
+  if(f.type && categoryId === 4) p.set('type', f.type);
+  return API_BASE + '/api_search.php?' + p.toString();
+}
+
+function runSearch(){
+  renderFilterSummary();
+  loadListings(currentCategoryId, 'fullList');
+}
+
+function renderFilterSummary(){
+  const f = searchFilters, parts = [];
+  if(f.q) parts.push('« ' + f.q + ' »');
+  if(f.subLabel) parts.push(f.subLabel);
+  if(f.city) parts.push('📍 ' + f.city);
+  if(f.priceMin !== '' || f.priceMax !== '') parts.push((f.priceMin || 0) + ' – ' + (f.priceMax || '∞'));
+  if(f.type) parts.push(f.type === 'offer' ? 'Je vends' : 'Je recherche');
+  const n = (f.subId?1:0) + (f.city?1:0) + ((f.priceMin!==''||f.priceMax!=='')?1:0) + (f.type?1:0);
+  document.getElementById('fltBadge').textContent = n ? ' (' + n + ')' : '';
+  document.getElementById('fltSummary').innerHTML = parts.length
+    ? escapeHtml(parts.join(' · ')) + ' — <a href="#" style="color:var(--orange-dark);font-weight:600;" onclick="resetSearchFilters(true);return false;">Effacer</a>'
+    : '';
+}
+
+function resetSearchFilters(runNow){
+  Object.assign(searchFilters, { q:'', city:'', priceMin:'', priceMax:'', type:'', subId:null, subLabel:'' });
+  const q = document.getElementById('fltQ'); if(q) q.value = '';
+  if(runNow){ runSearch(); } else { renderFilterSummary(); }
+}
+
+document.getElementById('fltQ').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ searchFilters.q = e.target.value.trim(); runSearch(); }
+});
+document.getElementById('homeQ').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){
+    searchFilters.q = e.target.value.trim();
+    document.getElementById('fltQ').value = searchFilters.q;
+    runSearch(); go('annonces');
+  }
+});
+
+function doSearch(){
+  searchFilters.q = document.getElementById('fltQ').value.trim();
+  runSearch();
+}
+function doHomeSearch(){
+  const v = document.getElementById('homeQ').value.trim();
+  searchFilters.q = v;
+  document.getElementById('fltQ').value = v;
+  runSearch(); go('annonces');
+}
+/* Sous-page "Filtres" */
+let fltTree = [], fltIndex = {}, fltStack = [], fltPending = { id:null, label:'' };
+
+async function openFilters(){
+  openSubpage('Filtres', 'filters');
+  const f = searchFilters;
+  fltPending = { id: f.subId, label: f.subLabel };
+  fltStack = []; fltTree = []; fltIndex = {};
+  fltCat = currentCategoryId;
+  const catOpts = '<option value="">Toutes les catégories</option>' +
+    categories.map(c => `<option value="${c.id}" ${c.id===fltCat?'selected':''}>${escapeHtml(metaFor(c.slug).icon + ' ' + c.name)}</option>`).join('');
+  document.getElementById('subpageBody').innerHTML = `
+    <div class="field"><label>Catégorie</label>
+      <select id="fltCat" onchange="onFltCatChange(this.value)">${catOpts}</select></div>
+    <div id="fltSubWrap"></div>
+    <datalist id="fCityList"></datalist>
+    <div class="field" style="margin-top:14px;"><label>Ville</label>
+      <input id="fltCity" list="fCityList" autocomplete="off" placeholder="Toutes les villes" value="${escapeHtml(f.city)}"></div>
+    <div class="field"><label>Prix minimum</label>
+      <input id="fltPmin" type="number" inputmode="decimal" min="0" value="${escapeHtml(f.priceMin)}"></div>
+    <div class="field"><label>Prix maximum</label>
+      <input id="fltPmax" type="number" inputmode="decimal" min="0" value="${escapeHtml(f.priceMax)}"></div>
+    <div id="fltTypeWrap"></div>
+    <button class="btn" onclick="applySearchFilters()">Afficher les résultats</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="resetSearchFilters(true);closeSubpage();">Réinitialiser</button>
+  `;
+  bindAdCityAutocomplete('fltCity', 'fCityList');
+  renderFltType();
+  await loadFltTree();
+}
+
+let fltCat = null;
+
+function renderFltType(){
+  const w = document.getElementById('fltTypeWrap'); if(!w) return;
+  w.innerHTML = fltCat === 4 ? `<div class="field"><label>Type d'annonce</label>
+    <select id="fltType">
+      <option value="">Toutes</option>
+      <option value="offer" ${searchFilters.type==='offer'?'selected':''}>Je vends</option>
+      <option value="demand" ${searchFilters.type==='demand'?'selected':''}>Je recherche</option>
+    </select></div>` : '';
+}
+
+async function loadFltTree(){
+  const w = document.getElementById('fltSubWrap'); if(!w) return;
+  fltStack = []; fltTree = []; fltIndex = {};
+  if(!fltCat){ w.innerHTML = ''; return; }
+  w.innerHTML = '<h3 class="section">Sous-catégorie</h3><div id="fltSub"><p class="subpage-loading">Chargement…</p></div>';
+  try{
+    const d = await apiFetch('/api_filters.php?category_id=' + fltCat);
+    fltTree = d.success ? d.tree : [];
+    (function idx(nodes){ nodes.forEach(n => { fltIndex[n.id] = n; idx(n.children); }); })(fltTree);
+  }catch(e){ fltTree = []; }
+  renderFltSub();
+}
+
+function onFltCatChange(v){
+  fltCat = v ? parseInt(v, 10) : null;
+  fltPending = { id:null, label:'' };
+  renderFltType();
+  loadFltTree();
+}
+
+function renderFltSub(){
+  const el = document.getElementById('fltSub'); if(!el) return;
+  const cur = fltStack.length ? fltStack[fltStack.length - 1] : null;
+  const nodes = cur ? cur.children : fltTree;
+  const row = (label, click, sel, arrow) =>
+    `<div class="menu-row" style="${sel?'border-color:var(--orange);':''}" onclick="${click}">
+       <span class="l">${sel?'✅ ':''}${escapeHtml(label)}</span><span>${arrow?'›':''}</span></div>`;
+  let h = '';
+  if(cur){
+    h += `<div class="chip" style="display:inline-block;margin-bottom:10px;" onclick="fltUp()">← ${escapeHtml(cur.name)}</div>`;
+    h += row('Tout « ' + cur.name + ' »', `fltPick(${cur.id})`, fltPending.id === cur.id, false);
+  } else {
+    h += row('Toutes les sous-catégories', 'fltPick(0)', !fltPending.id, false);
+  }
+  if(!nodes.length && !cur) h += '<p class="subpage-loading">Aucune sous-catégorie.</p>';
+  nodes.forEach(n => {
+    h += row(n.name, n.children.length ? `fltOpen(${n.id})` : `fltPick(${n.id})`, fltPending.id === n.id, n.children.length > 0);
+  });
+  el.innerHTML = h;
+}
+function fltOpen(id){ fltStack.push(fltIndex[id]); renderFltSub(); }
+function fltUp(){ fltStack.pop(); renderFltSub(); }
+function fltPick(id){
+  fltPending = id ? { id, label: fltIndex[id].name } : { id:null, label:'' };
+  renderFltSub();
+}
+
+function applySearchFilters(){
+  const v = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  currentCategoryId = fltCat;
+  Object.assign(searchFilters, {
+    subId: fltCat ? fltPending.id : null,
+    subLabel: fltCat ? fltPending.label : '',
+    city: v('fltCity'), priceMin: v('fltPmin'), priceMax: v('fltPmax'),
+    type: fltCat === 4 ? v('fltType') : '',
+  });
+  closeSubpage();
+  renderChips();
+  runSearch();
+}
+
+/* Autocomplétion des villes présentes dans les annonces */
+let adCityTimer = null;
+function bindAdCityAutocomplete(inputId, listId){
+  const inp = document.getElementById(inputId), dl = document.getElementById(listId);
+  if(!inp || !dl) return;
+  inp.addEventListener('input', () => {
+    clearTimeout(adCityTimer);
+    const v = inp.value.trim();
+    if(v.length < 2){ dl.innerHTML = ''; return; }
+    adCityTimer = setTimeout(async () => {
+      try{
+        const r = await fetch(API_BASE + '/api_cities.php?q=' + encodeURIComponent(v));
+        const d = await r.json();
+        dl.innerHTML = (d.cities || []).map(c => `<option value="${escapeHtml(c)}">`).join('');
+      }catch(e){}
+    }, 250);
+  });
 }
 
 /* ---------- MOT DE PASSE OUBLIÉ ---------- */
