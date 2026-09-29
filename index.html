@@ -4,14 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ÔZAnnonces — App</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#f97316">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ÔZAnnonces">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <style>
 :root{
   --orange:#f97316; --orange-dark:#ea580c; --bg:#faf9f7; --card:#ffffff;
@@ -174,12 +166,30 @@ nav button{flex:1;background:none;border:none;display:flex;flex-direction:column
   gap:3px;padding:6px 0;color:var(--muted);font-size:10.5px;font-weight:600;cursor:pointer;}
 nav button .ic{font-size:20px;}
 nav button.active{color:var(--orange-dark);}
-
-/* --- Ajustements PWA / iOS --- */
-html{-webkit-text-size-adjust:100%;}
-body{overscroll-behavior-y:none;}
-#phone{height:100vh;height:100dvh;min-height:0;}   /* la barre du bas reste fixe, seuls les écrans défilent */
-input,select,textarea{font-size:16px !important;}   /* évite le zoom automatique d'iOS au focus */
+#detail .back-btn{z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.detail-scroll{flex:1;overflow-y:auto;}
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:240px;
+  background:linear-gradient(135deg,#fdba74,#f97316);}
+.gallery>*{flex:0 0 100%;scroll-snap-align:center;display:flex;align-items:center;justify-content:center;font-size:60px;}
+.gallery img{width:100%;height:100%;object-fit:cover;}
+.dt-body{padding:18px 18px 24px;}
+.dt-body h2{margin:0 0 6px;font-size:20px;}
+.dt-price{color:var(--orange-dark);font-weight:800;font-size:22px;margin-bottom:10px;}
+.dt-meta{color:var(--muted);font-size:12.5px;margin-bottom:14px;}
+.dt-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.dt-tag{background:#fff7ed;color:var(--orange-dark);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;}
+.dt-h{font-size:14px;font-weight:700;margin:18px 0 8px;}
+.dt-desc{color:#555;line-height:1.5;font-size:14.5px;white-space:pre-line;}
+.dt-attr{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+.dt-attr span:first-child{color:var(--muted);}
+.dt-seller{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;font-size:14px;}
+.dt-phone{display:block;margin-top:8px;color:var(--orange-dark);font-weight:800;font-size:16px;text-decoration:none;}
+.dt-gate{background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px;color:#7c2d12;font-size:13.5px;}
+.dt-sim{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.dt-sim .s{flex:0 0 130px;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;}
+.dt-sim .s .im{height:80px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;}
+.dt-sim .s img{width:100%;height:100%;object-fit:cover;}
+.dt-sim .s .tx{padding:7px 8px;font-size:12px;font-weight:600;}
 </style>
 </head>
 <body>
@@ -229,17 +239,10 @@ input,select,textarea{font-size:16px !important;}   /* évite le zoom automatiqu
 
   <!-- DÉTAIL ANNONCE -->
   <div id="detail">
-    <div class="detail-hero" id="detailHero">
-      <button class="back-btn" onclick="closeDetail()">←</button>
-      <span id="detailIcon">🚲</span>
-    </div>
-    <div class="detail-body">
-      <h2 id="detailTitle">Vélo électrique</h2>
-      <div class="price" id="detailPrice">450 €</div>
-      <p id="detailDesc">Description fictive pour la maquette — le vrai contenu viendra de ozannonces.fr.</p>
-    </div>
-    <div class="detail-footer"><button class="btn" onclick="contactSeller()">Contacter le vendeur</button></div>
-  </div>
+  <button class="back-btn" onclick="closeDetail()">←</button>
+  <div class="detail-scroll" id="detailScroll"></div>
+  <div class="detail-footer" id="detailFooter"></div>
+</div>
 
   <!-- SOUS-PAGES NATIVES (Profil / Mes annonces / Messagerie / Espace pro) -->
   <div id="subpage">
@@ -259,10 +262,18 @@ input,select,textarea{font-size:16px !important;}   /* évite le zoom automatiqu
 </div>
 
 <script>
-// PWA hébergée sur GitHub Pages : l'API tourne sur un autre domaine (le vrai backend PHP).
-// www. est obligatoire : ozannonces.fr (sans www) redirige (301) vers www.ozannonces.fr,
-// et cette redirection casse le CORS — on appelle donc directement la bonne adresse.
 const API_BASE = 'https://www.ozannonces.fr';
+
+// Les cookies tiers étant bloqués par les WebView, on renvoie l'ID de session en en-tête
+const _origFetch = window.fetch.bind(window);
+window.fetch = function(url, opts){
+  opts = opts || {};
+  if(typeof url === 'string' && url.indexOf(API_BASE) === 0){
+    const sid = localStorage.getItem('oz_sid');
+    if(sid) opts = Object.assign({}, opts, { headers: Object.assign({}, opts.headers || {}, {'X-Session-Id': sid}) });
+  }
+  return _origFetch(url, opts);
+};
 
 // Icône + libellé lisible pour chaque catégorie (clé = slug renvoyé par l'API)
 const CAT_META = {
@@ -448,46 +459,97 @@ function go(name){
   if(name==='deposer') updateDeposerGate();
 }
 
-let currentDetailIndex = null;
-function openDetail(i){
-  const a = lastAds[i];
-  if(!a) return;
-  currentDetailIndex = i;
-  const m = metaFor(a.category_slug);
-  document.getElementById('detailHero').style.background = `linear-gradient(135deg, ${m.color}cc, ${m.color})`;
-  document.getElementById('detailHero').innerHTML =
-    `<button class="back-btn" onclick="closeDetail()">←</button>` +
-    (a.image ? `<img src="${a.image}" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML='<span>${m.icon}</span>'">` : `<span>${m.icon}</span>`);
-  document.getElementById('detailTitle').textContent = a.title;
-  document.getElementById('detailPrice').textContent = (a.price === null || a.price === 0) ? 'Prix non précisé' : (Math.round(a.price) + ' ' + (a.currency||'€'));
-  document.getElementById('detailDesc').textContent = '📍 ' + (a.city || 'Localisation non précisée') + ' — pour tous les détails et contacter le vendeur, ouvrez l\'annonce sur ozannonces.fr.';
+/* ---------- FICHE DÉTAIL (api_details.php) ---------- */
+let currentDetail = null;
+let pendingDetailId = null;
+const fmtPrice = a => (a.price === null || a.price === 0) ? 'Prix non précisé' : (Math.round(a.price) + ' ' + (a.currency || '€'));
+const imgOrIcon = (src, icon) => src
+  ? `<img src="${escapeHtml(src)}" alt="" onerror="this.outerHTML='<span>${icon}</span>'">` : `<span>${icon}</span>`;
+
+function openDetail(i){ const a = lastAds[i]; if(a) openDetailById(a.id, a); }
+
+async function openDetailById(id, preview){
+  currentDetail = null;
+  const m = metaFor(preview && preview.category_slug);
+  document.getElementById('detailScroll').innerHTML =
+    `<div class="gallery">${preview ? `<div>${imgOrIcon(preview.image, m.icon)}</div>` : ''}</div>
+     <div class="dt-body">${preview ? `<h2>${escapeHtml(preview.title)}</h2><div class="dt-price">${fmtPrice(preview)}</div>` : ''}
+     <p class="subpage-loading">Chargement…</p></div>`;
+  document.getElementById('detailFooter').innerHTML = '';
   document.getElementById('detail').classList.add('open');
+  document.getElementById('detailScroll').scrollTop = 0;
+  try{
+    const data = await apiFetch('/api_details.php?id=' + id);
+    if(!data.success) throw new Error(data.error || 'Erreur');
+    currentUser = data.logged_in ? (currentUser || {}) : null; // garde l'état de connexion synchronisé
+    currentDetail = data;
+    renderDetail(data);
+  }catch(e){
+    document.querySelector('#detailScroll .dt-body').innerHTML =
+      `<p class="subpage-loading">${escapeHtml(e.message || 'Erreur réseau.')}</p>`;
+  }
 }
+
+function renderDetail(d){
+  const a = d.annonce, m = metaFor(a.category_slug);
+  const gallery = a.images.length
+    ? a.images.map(im => `<div>${imgOrIcon(im.url, m.icon)}</div>`).join('')
+    : `<div>${m.icon}</div>`;
+  const date = new Date((a.created_at || '').replace(' ', 'T')).toLocaleDateString('fr-FR');
+  const tags = [a.category_name, a.subcategory_name, a.condition, a.property_type, a.transaction,
+    a.seller_type === 'professionnel' ? 'Professionnel' : (a.seller_type ? 'Particulier' : null)]
+    .filter(Boolean).map(t => `<span class="dt-tag">${escapeHtml(t)}</span>`).join('');
+  const attrs = a.attributes.length
+    ? `<div class="dt-h">Caractéristiques</div>` +
+      a.attributes.map(x => `<div class="dt-attr"><span>${escapeHtml(x.name)}</span><span>${escapeHtml(x.value)}</span></div>`).join('') : '';
+
+  // Vendeur : le téléphone n'est présent dans la réponse que si connecté
+  let seller = `<div class="dt-h">Vendeur</div><div class="dt-seller"><b>${escapeHtml(d.seller.name || 'Vendeur')}</b>
+    <div style="color:var(--muted);font-size:12.5px;">📍 ${escapeHtml(d.seller.city || a.city || '')}</div>`;
+  if(d.contact){
+    seller += d.contact.telephone
+      ? `<a class="dt-phone" href="tel:${escapeHtml(d.contact.telephone)}">📞 ${escapeHtml(d.contact.telephone)}</a>`
+      : `<div style="color:var(--muted);font-size:13px;margin-top:8px;">Téléphone non renseigné</div>`;
+  } else {
+    seller += `<div class="dt-gate" style="margin-top:10px;">🔒 Connectez-vous pour voir le numéro et contacter le vendeur.</div>`;
+  }
+  seller += `</div>`;
+
+  const sim = d.similar.length ? `<div class="dt-h">Annonces similaires</div><div class="dt-sim">` +
+    d.similar.map(s => `<div class="s" onclick="openDetailById(${s.id})">
+      <div class="im">${imgOrIcon(s.image, m.icon)}</div>
+      <div class="tx">${escapeHtml(s.title)}<div style="color:var(--orange-dark);font-weight:800;">${fmtPrice(s)}</div></div></div>`).join('') + `</div>` : '';
+
+  document.getElementById('detailScroll').innerHTML = `
+    <div class="gallery">${gallery}</div>
+    <div class="dt-body">
+      <h2>${escapeHtml(a.title)}</h2>
+      <div class="dt-price">${fmtPrice(a)}</div>
+      <div class="dt-meta">📍 ${escapeHtml(a.city || 'Localisation non précisée')} · ${date} · 👁 ${a.views} vues · Réf. #${a.id}</div>
+      <div class="dt-tags">${tags}</div>
+      <div class="dt-h">Description</div>
+      <div class="dt-desc">${escapeHtml(a.description || 'Aucune description disponible')}</div>
+      ${attrs}${seller}${sim}
+    </div>`;
+
+  const f = document.getElementById('detailFooter');
+  if(d.is_owner){
+    f.innerHTML = `<button class="btn ghost" onclick="closeDetail();openAdEdit(${a.id})">Modifier mon annonce</button>`;
+  } else if(d.logged_in && d.contact){
+    f.innerHTML = `<button class="btn" onclick="contactSeller()">💬 Envoyer un message</button>`;
+  } else {
+    f.innerHTML = `<button class="btn" onclick="pendingDetailId=${a.id};closeDetail();go('profil')">Se connecter pour contacter</button>
+  <button class="btn ghost small" style="margin-top:8px;" onclick="openRegister()">Créer un compte</button>`;
+  }
+}
+
 function closeDetail(){ document.getElementById('detail').classList.remove('open'); }
 
-// ✅ "Contacter le vendeur" : masqué de fait pour les non-connectés — on
-// vérifie l'état de connexion avant d'ouvrir la messagerie, sinon on
-// propose de se connecter ou de créer un compte (aucun accès au chat ni
-// à un numéro de téléphone tant que l'utilisateur n'est pas identifié).
 function contactSeller(){
-  const a = lastAds[currentDetailIndex];
-  if(!a) return;
-  if(!currentUser){
-    document.getElementById('detailDesc').insertAdjacentHTML('afterend', `
-      <div id="contactGate" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:16px;margin-top:14px;">
-        <p style="font-size:13.5px;color:#7c2d12;margin:0 0 12px;">Connectez-vous ou créez un compte pour contacter le vendeur.</p>
-        <button class="btn small" onclick="closeDetail(); go('profil');">Se connecter</button>
-        <button class="btn ghost small" style="margin-top:8px;" onclick="openRegister()">Créer un compte</button>
-      </div>`);
-    return;
-  }
-  if(a.owner_id === undefined || a.owner_id === null){
-    alert("Impossible de contacter ce vendeur pour le moment.");
-    return;
-  }
-  openChat(a.id, a.owner_id, /*standalone=*/true);
+  const d = currentDetail;
+  if(!d || !d.logged_in || !d.contact) return;
+  openChat(d.annonce.id, d.contact.owner_id, /*standalone=*/true);
 }
-
 /* ================================================================
    SOUS-PAGES NATIVES : Profil / Mes annonces / Messagerie / Espace pro
    ================================================================ */
@@ -655,7 +717,7 @@ async function deleteAd(id){
   }catch(e){ alert('Erreur réseau.'); }
 }
 function openBoostExternal(id){
-  window.open(API_BASE + '/payment_gateway.php?annonce_id=' + id + '&source=app', '_blank');
+  window.open(API_BASE + '/payment_gateway.php?annonce_id=' + id + '&source=app', '_system');
 }
 
 /* ---------- MA MESSAGERIE ---------- */
@@ -804,7 +866,7 @@ async function openEspacePro(){
       ${jours.map(j=>`<div class="field"><label style="text-transform:capitalize">${j}</label><input id="proH_${j}" value="${escapeHtml((v.horaires && v.horaires[j]) || '')}" placeholder="Ex : 9h00 – 18h00"></div>`).join('')}
       <div id="proMsg" style="color:#dc2626;font-size:13px;margin:6px 0;"></div>
       <button class="btn" onclick="submitEspacePro()">Enregistrer les modifications</button>
-      ${v.statut==='actif' ? `<button class="btn ghost" style="margin-top:10px;" onclick="window.open('${API_BASE}/entreprise.php?slug=${v.slug}','_blank')">Voir ma vitrine</button>` : ''}
+      ${v.statut==='actif' ? `<button class="btn ghost" style="margin-top:10px;" onclick="window.open('${API_BASE}/entreprise.php?slug=${v.slug}','_system')">Voir ma vitrine</button>` : ''}
     `;
   }catch(e){
     document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
@@ -1020,8 +1082,8 @@ function openRegister(){
     <div class="field"><label>Ville *</label><input id="rCity" list="rCityList" autocomplete="off" placeholder="Tapez une ville"></div>
     <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#555;margin:6px 0 14px;">
       <input type="checkbox" id="rTerms" style="margin-top:3px;">
-      <span>J'accepte les <a href="#" onclick="window.open(API_BASE+'/terms.php','_blank');return false;">conditions d'utilisation</a>
-      et la <a href="#" onclick="window.open(API_BASE+'/privacy.php','_blank');return false;">politique de confidentialité</a>.</span>
+      <span>J'accepte les <a href="#" onclick="window.open(API_BASE+'/terms.php','_system');return false;">conditions d'utilisation</a>
+      et la <a href="#" onclick="window.open(API_BASE+'/privacy.php','_system');return false;">politique de confidentialité</a>.</span>
     </label>
     <div id="rMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
     <button class="btn" id="rBtn" onclick="submitRegister()">S'inscrire</button>
@@ -1102,6 +1164,7 @@ function openProDemande(){
   bindCityAutocomplete('pVille', 'pCityList');
 }
 
+
 async function submitProDemande(){
   const v = id => document.getElementById(id).value.trim();
   const msg = document.getElementById('pMsg');
@@ -1131,6 +1194,101 @@ async function submitProDemande(){
   }catch(e){
     msg.textContent = 'Erreur réseau.';
     btn.disabled = false; btn.textContent = 'Envoyer ma demande';
+  }
+}
+
+/* ---------- MOT DE PASSE OUBLIÉ ---------- */
+function openForgotPassword(){
+  openSubpage('Mot de passe oublié', 'forgot');
+  const prefill = (document.getElementById('loginEmail') || {}).value || '';
+  document.getElementById('subpageBody').innerHTML = `
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Entrez votre adresse email : nous vous enverrons un lien de réinitialisation valable <b>1 heure</b>.</p>
+    <div class="field"><label>Adresse email</label><input id="fEmail" type="email" placeholder="vous@exemple.com" value="${escapeHtml(prefill)}"></div>
+    <div id="fMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="fBtn" onclick="submitForgot()">Envoyer le lien</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="openResetPassword()">J'ai déjà reçu un lien</button>
+  `;
+}
+
+async function submitForgot(){
+  const email = document.getElementById('fEmail').value.trim();
+  const msg = document.getElementById('fMsg');
+  msg.style.color = '#dc2626'; msg.textContent = '';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = 'Veuillez entrer un email valide.';
+
+  const btn = document.getElementById('fBtn');
+  btn.disabled = true; btn.textContent = 'Envoi…';
+  try{
+    const data = await apiFetch('/api_forgot_password.php', {method:'POST', body: JSON.stringify({email})});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">📧</div>
+          <h3 style="margin:10px 0 8px;">Vérifiez vos emails</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message)}<br><br><b>Pensez à vérifier votre dossier spam.</b></p>
+          <button class="btn" style="margin-top:18px;" onclick="openResetPassword()">Saisir le lien reçu</button>
+          <button class="btn ghost" style="margin-top:10px;" onclick="closeSubpage()">Retour à la connexion</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || "L'envoi n'a pas abouti.";
+      btn.disabled = false; btn.textContent = 'Envoyer le lien';
+    }
+  }catch(e){
+    msg.textContent = 'Erreur réseau.';
+    btn.disabled = false; btn.textContent = 'Envoyer le lien';
+  }
+}
+
+function openResetPassword(){
+  openSubpage('Nouveau mot de passe', 'reset');
+  document.getElementById('subpageBody').innerHTML = `
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Collez ici le lien reçu par email (ou son code), puis choisissez un nouveau mot de passe.</p>
+    <div class="field"><label>Lien ou code reçu par email *</label><textarea id="rTok" rows="2" placeholder="https://www.ozannonces.fr/...token=..."></textarea></div>
+    <div class="field"><label>Nouveau mot de passe * (8 caractères min.)</label><input id="rNewPass" type="password"></div>
+    <div class="field"><label>Confirmer le mot de passe *</label><input id="rNewPass2" type="password"></div>
+    <div id="rsMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="rsBtn" onclick="submitResetPassword()">Modifier mon mot de passe</button>
+  `;
+}
+
+// Accepte le lien complet collé (…?token=xxx) ou le token seul
+function extractResetToken(raw){
+  const s = (raw || '').trim();
+  const m = s.match(/[?&]token=([^&\s#]+)/i);
+  return m ? decodeURIComponent(m[1]) : s;
+}
+
+async function submitResetPassword(){
+  const token = extractResetToken(document.getElementById('rTok').value);
+  const pass = document.getElementById('rNewPass').value;
+  const pass2 = document.getElementById('rNewPass2').value;
+  const msg = document.getElementById('rsMsg');
+  msg.textContent = '';
+  if(!token) return msg.textContent = 'Collez le lien reçu par email.';
+  if(pass.length < 8) return msg.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+  if(pass !== pass2) return msg.textContent = 'Les mots de passe ne correspondent pas.';
+
+  const btn = document.getElementById('rsBtn');
+  btn.disabled = true; btn.textContent = 'Modification…';
+  try{
+    const data = await apiFetch('/api_reset_password.php', {method:'POST', body: JSON.stringify({
+      token, password: pass, confirm_password: pass2
+    })});
+    if(data.success){
+      document.getElementById('subpageBody').innerHTML = `
+        <div style="text-align:center;padding:24px 4px;">
+          <div style="font-size:46px;">✅</div>
+          <h3 style="margin:10px 0 8px;">Mot de passe modifié</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message)}</p>
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage();go('profil')">Se connecter</button>
+        </div>`;
+    } else {
+      msg.textContent = data.error || 'Erreur.';
+      btn.disabled = false; btn.textContent = 'Modifier mon mot de passe';
+    }
+  }catch(e){
+    msg.textContent = 'Erreur réseau.';
+    btn.disabled = false; btn.textContent = 'Modifier mon mot de passe';
   }
 }
 
@@ -1172,6 +1330,9 @@ function renderProfilLoggedOut(){
     <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="vous@exemple.com"></div>
     <div class="field"><label>Mot de passe</label><input id="loginPassword" type="password" placeholder="••••••••"></div>
     <div id="loginError" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <div style="text-align:right;margin:-4px 0 10px;">
+  <a href="#" onclick="openForgotPassword();return false;" style="color:var(--orange-dark);font-size:13px;font-weight:600;">Mot de passe oublié ?</a>
+</div>
     <button class="btn" onclick="submitLogin()">Se connecter</button>
     <p style="text-align:center;color:var(--muted);font-size:13.5px;margin:18px 0 8px;">Pas encore de compte ?</p>
     <button class="btn ghost" onclick="openRegister()">Créer un compte</button>
@@ -1192,9 +1353,11 @@ async function submitLogin(){
     });
     const data = await res.json();
     if(data.success){
-      renderProfilLoggedIn(data.user);
-      await checkAuth();
-    } else {
+  if(data.session_id) localStorage.setItem('oz_sid', data.session_id); // ← indispensable
+  renderProfilLoggedIn(data.user);
+  await checkAuth();
+  if(pendingDetailId){ const id = pendingDetailId; pendingDetailId = null; openDetailById(id); }
+} else {
       errEl.textContent = data.error || 'Connexion impossible.';
     }
   }catch(e){
@@ -1204,6 +1367,8 @@ async function submitLogin(){
 
 async function logout(){
   try{ await fetch(API_BASE + '/api_logout.php', { credentials: 'include' }); }catch(e){}
+  localStorage.removeItem('oz_sid');
+  pendingDetailId = null;
   renderProfilLoggedOut();
   currentUser = null;
   resetDeposer();
@@ -1214,23 +1379,6 @@ async function logout(){
 loadCategories();
 loadListings(null, 'homeList');
 checkAuth();
-</script>
-<script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
-}
-// Astuce d'installation : affichée une seule fois sur iPhone/iPad (Safari, hors mode installé)
-(function(){
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-  let dismissed = false; try{ dismissed = localStorage.getItem('oz_install_hint') === '1'; }catch(e){}
-  if(!isIOS || standalone || dismissed) return;
-  const b = document.createElement('div');
-  b.style.cssText = 'position:absolute;left:12px;right:12px;bottom:76px;z-index:40;background:#1f2937;color:#fff;border-radius:14px;padding:12px 40px 12px 14px;font-size:13px;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.25);';
-  b.innerHTML = "Installez l'app : touchez <b>Partager</b> ⬆︎ puis <b>« Sur l'écran d'accueil »</b>.<button aria-label=\"Fermer\" style=\"position:absolute;top:6px;right:8px;background:none;border:none;color:#fff;font-size:18px;\">✕</button>";
-  b.querySelector('button').onclick = () => { b.remove(); try{ localStorage.setItem('oz_install_hint','1'); }catch(e){} };
-  document.getElementById('phone').appendChild(b);
-})();
 </script>
 </body>
 </html>
