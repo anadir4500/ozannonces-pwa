@@ -181,6 +181,7 @@ nav button.active{color:var(--orange-dark);}
 .dt-h{font-size:14px;font-weight:700;margin:18px 0 8px;}
 .dt-desc{color:#555;line-height:1.5;font-size:14.5px;white-space:pre-line;}
 .dt-attr{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+
 .dt-attr span:first-child{color:var(--muted);}
 .dt-seller{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;font-size:14px;}
 .dt-phone{display:block;margin-top:8px;color:var(--orange-dark);font-weight:800;font-size:16px;text-decoration:none;}
@@ -190,6 +191,37 @@ nav button.active{color:var(--orange-dark);}
 .dt-sim .s .im{height:80px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;}
 .dt-sim .s img{width:100%;height:100%;object-fit:cover;}
 .dt-sim .s .tx{padding:7px 8px;font-size:12px;font-weight:600;}
+[dir=rtl] .logo,[dir=rtl] .ad-card,[dir=rtl] .ad-info,[dir=rtl] .dt-body,[dir=rtl] .field label{text-align:right}
+[dir=rtl] .back-btn,[dir=rtl] .subpage-bar button{transform:scaleX(-1)}
+[dir=rtl] .back-btn{left:auto;right:16px}
+[dir=rtl] #detail,[dir=rtl] #subpage{transform:translateX(-100%)}
+[dir=rtl] #detail.open,[dir=rtl] #subpage.open{transform:translateX(0)}
+[dir=rtl] .banner::after{right:auto;left:-30px}
+[dir=rtl] .msg.received{border-bottom-left-radius:16px;border-bottom-right-radius:4px}
+[dir=rtl] .msg.sent{border-bottom-right-radius:16px;border-bottom-left-radius:4px}
+.ad-card{position:relative;}
+.new-badge{position:absolute;top:10px;left:10px;background:#16a34a;color:#fff;font-size:9px;
+  font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:14px 0 8px 0;z-index:2;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);}
+[dir=rtl] .new-badge{left:auto;right:10px;border-radius:0 14px 0 8px;}
+
+
+/* Visionneuse photos (lightbox) */
+#lightbox{position:absolute;inset:0;background:#000;z-index:50;display:none;flex-direction:column;}
+#lightbox.open{display:flex;}
+.lb-close{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:14px;z-index:3;
+  width:40px;height:40px;border:none;border-radius:50%;background:rgba(255,255,255,.18);
+  color:#fff;font-size:18px;cursor:pointer;}
+.lb-count{position:absolute;top:calc(22px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);
+  z-index:3;color:#fff;font-size:14px;font-weight:700;background:rgba(0,0,0,.4);padding:4px 12px;border-radius:999px;}
+.lb-track{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;}
+.lb-track::-webkit-scrollbar{display:none;}
+.lb-slide{flex:0 0 100%;height:100%;scroll-snap-align:center;scroll-snap-stop:always;display:flex;
+  align-items:center;justify-content:center;overflow:hidden;touch-action:pan-x;}
+.lb-slide img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center center;
+  user-select:none;-webkit-user-drag:none;will-change:transform;}
+.gallery>*{cursor:zoom-in;}
 </style>
 </head>
 <body>
@@ -216,11 +248,11 @@ nav button.active{color:var(--orange-dark);}
 
    
   <!-- ANNONCES -->
-<div class="screen" id="s-annonces">
+  <div class="screen" id="s-annonces">
   <div class="search" style="margin-bottom:10px;">
-    <span>🔍</span><input id="fltQ" placeholder="Rechercher une annonce…" enterkeyhint="search">
-    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doSearch()">OK</button>
-    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="openFilters()">⚙️ Filtres<span id="fltBadge"></span></button>
+    <span>🔍</span><input id="fltQ" data-i18n-ph="list.search_ph" placeholder="Rechercher une annonce…" enterkeyhint="search">
+    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doSearch()" data-i18n="home.search_btn">OK</button>
+    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="openFilters()">⚙️ <span data-i18n="list.filters">Filtres</span><span id="fltBadge"></span></button>
   </div>
   <div id="fltSummary" style="font-size:12.5px;color:var(--muted);margin:0 2px 10px;"></div>
   <div class="chips" id="chipsRow"></div>
@@ -251,6 +283,13 @@ nav button.active{color:var(--orange-dark);}
   <div class="detail-scroll" id="detailScroll"></div>
   <div class="detail-footer" id="detailFooter"></div>
 </div>
+
+  <!-- VISIONNEUSE PHOTOS -->
+  <div id="lightbox">
+    <button class="lb-close" onclick="closeLightbox()">✕</button>
+    <div class="lb-count" id="lbCount"></div>
+    <div class="lb-track" id="lbTrack"></div>
+  </div>
 
   <!-- SOUS-PAGES NATIVES (Profil / Mes annonces / Messagerie / Espace pro) -->
   <div id="subpage">
@@ -467,6 +506,110 @@ function go(name){
   if(name==='deposer') updateDeposerGate();
 }
 
+/* ---------- VISIONNEUSE PHOTOS (zoom + défilement) ---------- */
+const lb = { idx:0, s:1, x:0, y:0, pinch:null, pan:null, lastTap:0, timer:null };
+
+function lbImg(){ const sl = document.getElementById('lbTrack').children[lb.idx]; return sl ? sl.firstElementChild : null; }
+function lbApply(){
+  const im = lbImg(), tr = document.getElementById('lbTrack');
+  if(im) im.style.transform = `translate(${lb.x}px,${lb.y}px) scale(${lb.s})`;
+  tr.style.overflowX = lb.s > 1 ? 'hidden' : 'auto';   // pas de changement de photo pendant le zoom
+}
+function lbReset(){
+  const im = lbImg(); if(im) im.style.transform = '';
+  lb.s = 1; lb.x = 0; lb.y = 0; lb.pinch = null; lb.pan = null;
+  document.getElementById('lbTrack').style.overflowX = 'auto';
+}
+function lbClamp(){
+  const tr = document.getElementById('lbTrack');
+  const mx = (lb.s - 1) * tr.clientWidth / 2, my = (lb.s - 1) * tr.clientHeight / 2;
+  lb.x = Math.max(-mx, Math.min(mx, lb.x));
+  lb.y = Math.max(-my, Math.min(my, lb.y));
+}
+function lbUpdateCount(){
+  const n = document.getElementById('lbTrack').children.length;
+  document.getElementById('lbCount').textContent = n > 1 ? (lb.idx + 1) + ' / ' + n : '';
+}
+
+function openLightbox(i){
+  const imgs = (currentDetail && currentDetail.annonce.images || []).filter(x => x.url);
+  if(!imgs.length) return;
+  const tr = document.getElementById('lbTrack');
+  tr.innerHTML = imgs.map(x => `<div class="lb-slide"><img src="${escapeHtml(x.url)}" alt="" draggable="false"></div>`).join('');
+  document.getElementById('lightbox').classList.add('open');
+  lb.idx = Math.min(i || 0, imgs.length - 1);
+  lbReset();
+  tr.style.scrollBehavior = 'auto';
+  tr.scrollLeft = lb.idx * tr.clientWidth;
+  lbUpdateCount();
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lbTrack').innerHTML = '';
+  lbReset();
+}
+
+(function initLightbox(){
+  const tr = document.getElementById('lbTrack');
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+  // Changement de photo (swipe) : met à jour le compteur et remet le zoom à zéro
+  tr.addEventListener('scroll', () => {
+    clearTimeout(lb.timer);
+    lb.timer = setTimeout(() => {
+      const i = Math.round(tr.scrollLeft / tr.clientWidth);
+      if(i !== lb.idx){ lbReset(); lb.idx = i; lbUpdateCount(); }
+    }, 80);
+  });
+
+  tr.addEventListener('touchstart', e => {
+    if(e.touches.length === 2){
+      lb.pinch = { d: dist(e.touches), s: lb.s };
+    } else if(e.touches.length === 1){
+      const now = Date.now();
+      if(now - lb.lastTap < 300){            // double tap : zoom / dézoom
+        if(lb.s > 1){ lbReset(); } else { lb.s = 2.5; lb.x = 0; lb.y = 0; lbApply(); }
+        lb.lastTap = 0; return;
+      }
+      lb.lastTap = now;
+      lb.pan = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx: lb.x, ty: lb.y };
+    }
+  }, {passive:true});
+
+  tr.addEventListener('touchmove', e => {
+    if(lb.pinch && e.touches.length === 2){
+      e.preventDefault();
+      lb.s = Math.max(1, Math.min(5, lb.pinch.s * dist(e.touches) / lb.pinch.d));
+      if(lb.s === 1){ lb.x = 0; lb.y = 0; }
+      lbClamp(); lbApply();
+    } else if(lb.s > 1 && lb.pan && e.touches.length === 1){
+      e.preventDefault();
+      lb.x = lb.pan.tx + (e.touches[0].clientX - lb.pan.x);
+      lb.y = lb.pan.ty + (e.touches[0].clientY - lb.pan.y);
+      lbClamp(); lbApply();
+    }
+  }, {passive:false});
+
+  tr.addEventListener('touchend', e => {
+    if(e.touches.length < 2) lb.pinch = null;
+    if(lb.s < 1.05) lbReset();
+    else if(e.touches.length === 1)
+      lb.pan = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx: lb.x, ty: lb.y };
+    else lb.pan = null;
+  }, {passive:true});
+
+  // Souris / desktop : double-clic pour zoomer
+  tr.addEventListener('dblclick', () => {
+    if(lb.s > 1) lbReset(); else { lb.s = 2.5; lbApply(); }
+  });
+  document.addEventListener('keydown', e => {
+    if(!document.getElementById('lightbox').classList.contains('open')) return;
+    if(e.key === 'Escape') closeLightbox();
+    if(e.key === 'ArrowRight') tr.scrollBy({left: tr.clientWidth, behavior:'smooth'});
+    if(e.key === 'ArrowLeft')  tr.scrollBy({left: -tr.clientWidth, behavior:'smooth'});
+  });
+})();
+
 /* ---------- FICHE DÉTAIL (api_details.php) ---------- */
 let currentDetail = null;
 let pendingDetailId = null;
@@ -500,9 +643,9 @@ async function openDetailById(id, preview){
 
 function renderDetail(d){
   const a = d.annonce, m = metaFor(a.category_slug);
-  const gallery = a.images.length
-    ? a.images.map(im => `<div>${imgOrIcon(im.url, m.icon)}</div>`).join('')
-    : `<div>${m.icon}</div>`;
+const gallery = a.images.length
+  ? a.images.map((im, i) => `<div onclick="openLightbox(${i})">${imgOrIcon(im.url, m.icon)}</div>`).join('')
+  : `<div>${m.icon}</div>`;
   const date = new Date((a.created_at || '').replace(' ', 'T')).toLocaleDateString('fr-FR');
   const tags = [a.category_name, a.subcategory_name, a.condition, a.property_type, a.transaction,
     a.seller_type === 'professionnel' ? 'Professionnel' : (a.seller_type ? 'Particulier' : null)]
