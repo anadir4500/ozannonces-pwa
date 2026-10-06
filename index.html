@@ -1250,7 +1250,7 @@ function fillDeposerCategories(){
   if(!categories.length){ sel.innerHTML = '<option value="">Chargement…</option>'; return; }
   const prev = sel.value;
   sel.innerHTML = '<option value="">Choisir…</option>' +
-    categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    categories.map(c => `<option value="${c.id}">${escapeHtml(metaFor(c.slug).label)}</option>`).join('');
   if(prev) sel.value = prev;
   if(sel.value) onDepCatChange();
 }
@@ -1717,7 +1717,7 @@ async function openFilters(){
   fltStack = []; fltTree = []; fltIndex = {};
   fltCat = currentCategoryId;
   const catOpts = '<option value="">Toutes les catégories</option>' +
-    categories.map(c => `<option value="${c.id}" ${c.id===fltCat?'selected':''}>${escapeHtml(metaFor(c.slug).icon + ' ' + c.name)}</option>`).join('');
+    categories.map(c => `<option value="${c.id}" ${c.id===fltCat?'selected':''}>${escapeHtml(metaFor(c.slug).icon + ' ' + metaFor(c.slug).label)}</option>`).join('');
   document.getElementById('subpageBody').innerHTML = `
     <div class="field"><label>Catégorie</label>
       <select id="fltCat" onchange="onFltCatChange(this.value)">${catOpts}</select></div>
