@@ -1660,7 +1660,7 @@ function buildUrl(targetId, page, categoryId){
   if(f.priceMin !== '') p.set('price_min', f.priceMin);
   if(f.priceMax !== '') p.set('price_max', f.priceMax);
   if(f.type && categoryId === 4) p.set('type', f.type);
-  return API_BASE + '/api_search.php?' + p.toString();
+  return API_BASE + '/api_listings.php?' + p.toString();  // (ex-api_search.php, désormais géré par api_listings.php)
 }
 
 function runSearch(){
