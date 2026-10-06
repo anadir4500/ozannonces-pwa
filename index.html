@@ -269,8 +269,8 @@ nav button.active{color:var(--orange-dark);}
   <div class="screen active" id="s-accueil">
     <div class="search"><span>🔍</span><input id="homeQ" placeholder="Que recherchez-vous ?" enterkeyhint="search">
   <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doHomeSearch()">Rechercher</button></div>
-    <div id="ozaSection"></div>
     <div class="cats" id="catsGrid"></div>
+    <div id="ozaSection"></div>
     <div class="banner">
       <b>Une seconde vie pour vos objets 🌿</b>
       <span>Déposez votre première annonce en moins d'une minute.</span>
@@ -382,41 +382,66 @@ let catsExpanded = false;
 let currentCategoryId = null;
 
 /* ---------- OZAMarket : sous-catégories ---------- */
-// Icône de chaque sous-catégorie, reconnue à partir de son nom (les noms viennent de la base)
+const SUB_META = {
+  meubles:{icon:'🛋️',name:'Meubles'}, electronique:{icon:'📱',name:'Électronique & Multimédia'}, bricolage:{icon:'🛠️',name:'Bricolage'},
+  electromenager:{icon:'🔌',name:'Électroménager'}, vetements:{icon:'👕',name:'Vêtements'}, jardin:{icon:'🌿',name:'Jardin'},
+  sante:{icon:'🩺',name:'Santé & Paramédical'}, jeux:{icon:'🧸',name:'Jeux & Jouets'}, autres:{icon:'➕',name:'Autres'}
+};
+// Reconnaît la sous-catégorie à partir du nom renvoyé par la base
 const SUB_RULES = [
-  [/electromenag|électroménag/i, '🔌'], [/electronique|électronique|multim/i, '📱'], [/meuble/i, '🛋️'],
-  [/bricol/i, '🛠️'], [/vetement|vêtement/i, '👕'], [/jardin/i, '🌿'], [/sant[eé]|param[eé]d/i, '🩺'],
-  [/jeux|jouet/i, '🧸'], [/autre/i, '➕']
+  ['electromenager', /electromenag/], ['electronique', /electronique|multim/], ['meubles', /meuble/],
+  ['bricolage', /bricol/], ['vetements', /vetement/], ['jardin', /jardin/], ['sante', /sante|paramed/],
+  ['jeux', /jeux|jouet/], ['autres', /autre/]
 ];
-function subIcon(n){ const s = ((n.slug||'') + ' ' + (n.name||'')); for(const [re,ic] of SUB_RULES){ if(re.test(s)) return ic; } return '📦'; }
+function subKey(n){
+  const flat = ((n.slug||'') + ' ' + (n.name||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  for(const [k,re] of SUB_RULES){ if(re.test(flat)) return k; }
+  return null;
+}
+function subName(n){ return n.name || ''; }
+function subIcon(n){ const k = subKey(n); return k ? SUB_META[k].icon : '📦'; }
+function subDefaultName(k){ return SUB_META[k].name; }
+function ozaTitle(c){ return 'OZAMarket'; }
+function ozaSubtitle(){ return 'Achetez et vendez près de chez vous'; }
+function ozaSeeAll(){ return 'Voir tout'; }
 
 function ozaCat(){ return categories.find(c => c.slug === 'ozamarket') || null; }
-let ozaSubs = { id:null, nodes:[] };
+let ozaSubs = { id:null, lang:'fr', nodes:[] };
 async function loadOzaSubs(){
   const c = ozaCat(); if(!c) return [];
   if(ozaSubs.id === c.id && ozaSubs.nodes.length) return ozaSubs.nodes;
   try{
     const d = await apiFetch('/api_filters.php?category_id=' + c.id);
-    ozaSubs = { id: c.id, nodes: (d && d.success && d.tree) ? d.tree : [] };
-  }catch(e){ ozaSubs = { id: c.id, nodes: [] }; }
+    ozaSubs = { id: c.id, lang:'fr', nodes: (d && d.success && d.tree) ? d.tree : [] };
+  }catch(e){ ozaSubs = { id: c.id, lang:'fr', nodes: [] }; }
   return ozaSubs.nodes;
 }
 
-// Bloc OZAMarket de l'accueil : bandeau violet + sous-catégories défilantes
-async function renderOza(){
+// Bloc OZAMarket de l'accueil : affiché dès le départ avec les sous-catégories par défaut,
+// puis remplacé par les vraies sous-catégories (avec leurs identifiants) quand l'API répond.
+const SUB_DEFAULTS = ['meubles','electronique','bricolage','electromenager','vetements','jardin','sante','jeux','autres'];
+function ozaTiles(){
+  const nodes = ozaSubs.nodes;
+  return nodes.length
+    ? nodes.map(n => ({ id:n.id, key:subKey(n), icon:subIcon(n), name:subName(n) }))
+    : SUB_DEFAULTS.map(k => ({ id:null, key:k, icon:SUB_META[k].icon, name:subDefaultName(k) }));
+}
+function renderOza(){
   const el = document.getElementById('ozaSection'); if(!el) return;
   const c = ozaCat();
-  if(!c){ el.innerHTML = ''; return; }
-  const nodes = await loadOzaSubs();
   el.innerHTML = `<div class="oza-box">
     <div class="oza-head" onclick="pickOzaSub(null)">
-      <div><div class="tt">🛒 OZAMarket</div><div class="ss">Achetez et vendez près de chez vous</div></div>
-      <span class="all">Voir tout ›</span>
+      <div><div class="tt">🛒 ${escapeHtml(ozaTitle(c))}</div><div class="ss">${ozaSubtitle()}</div></div>
+      <span class="all">${ozaSeeAll()} ›</span>
     </div>
-    <div class="oza-scroll">${nodes.map(n =>
-      `<div class="oza-tile" onclick="pickOzaSub(${n.id})"><div class="ico">${subIcon(n)}</div><div class="lab">${escapeHtml(n.name)}</div></div>`
+    <div class="oza-scroll">${ozaTiles().map(x =>
+      `<div class="oza-tile" onclick="pickOzaSub(${x.id},'${x.key || ''}')"><div class="ico">${x.icon}</div><div class="lab">${escapeHtml(x.name)}</div></div>`
     ).join('')}</div>
   </div>`;
+  // Récupère les vraies sous-catégories en arrière-plan, puis réaffiche
+  if(c && (ozaSubs.id !== c.id || ozaSubs.lang !== 'fr' || !ozaSubs.nodes.length)){
+    loadOzaSubs().then(n => { if(n.length) renderOza(); });
+  }
 }
 
 // Puces de sous-catégories dans l'écran Annonces quand OZAMarket est sélectionné
@@ -427,16 +452,18 @@ async function renderSubChips(){
   const nodes = await loadOzaSubs();
   if(currentCategoryId !== c.id){ el.innerHTML = ''; return; }
   el.innerHTML = `<div class="subchip ${!searchFilters.subId?'on':''}" onclick="pickOzaSub(null)">Tout OZAMarket</div>` +
-    nodes.map(n => `<div class="subchip ${searchFilters.subId===n.id?'on':''}" onclick="pickOzaSub(${n.id})">${subIcon(n)} ${escapeHtml(n.name)}</div>`).join('');
+    nodes.map(n => `<div class="subchip ${searchFilters.subId===n.id?'on':''}" onclick="pickOzaSub(${n.id})">${subIcon(n)} ${escapeHtml(subName(n))}</div>`).join('');
 }
 
-async function pickOzaSub(subId){
+async function pickOzaSub(subId, key){
   const c = ozaCat(); if(!c) return;
   const nodes = await loadOzaSubs();
-  const n = subId ? nodes.find(x => x.id === subId) : null;
+  let n = null;
+  if(subId) n = nodes.find(x => x.id === subId) || null;
+  else if(key) n = nodes.find(x => subKey(x) === key) || null; // tuile par défaut : retrouve l'identifiant réel
   currentCategoryId = c.id;
   searchFilters.subId = n ? n.id : null;
-  searchFilters.subLabel = n ? n.name : '';
+  searchFilters.subLabel = n ? subName(n) : '';
   searchFilters.type = '';
   runSearch(); go('annonces'); renderChips();
 }
@@ -1192,7 +1219,7 @@ function renderDeposerForm(){
     <div class="upload" onclick="document.getElementById('dPhotoInput').click()">📷<br>Ajouter des photos (${D_MAX_PHOTOS} max)<br><small>La première sera la photo principale</small></div>
     <div id="dThumbs" class="img-thumb-row"></div>
     <div class="field"><label>Titre *</label><input id="dTitle" maxlength="120" placeholder="Ex : Vélo électrique en très bon état"></div>
-    <div class="field"><label>Catégorie *</label><select id="dCat"></select></div>
+    <div class="field"><label>Catégorie *</label><select id="dCat" autocomplete="off"></select></div>
     <div class="field" id="dSubField" style="display:none"><label id="dSubLabel">Sous-catégorie</label><select id="dSub"></select></div>
     <div class="field"><label>Prix (€)</label><input id="dPrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Laisser vide si non précisé"></div>
     <div class="field"><label>Description</label>
@@ -1209,7 +1236,6 @@ function renderDeposerForm(){
   document.getElementById('dTitle').addEventListener('blur', scheduleAutoDescription);
   bindCityAutocomplete('dCity', 'dCityList');
   fillDeposerCategories();
-  document.getElementById('dCat').addEventListener('change', onDepCatChange);
   // Préremplit le téléphone depuis le profil
   apiFetch('/api_profile.php').then(d => {
     const t = document.getElementById('dTel');
@@ -1226,12 +1252,28 @@ function fillDeposerCategories(){
   sel.innerHTML = '<option value="">Choisir…</option>' +
     categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
   if(prev) sel.value = prev;
+  if(sel.value) onDepCatChange();
 }
 
 // Sous-catégories du formulaire de dépôt (affichées dès que la catégorie en possède)
 const depSubCache = {};
+// Crée le champ « Sous-catégorie » s'il n'existe pas dans le formulaire (ne dépend pas du HTML du formulaire)
+function ensureSubField(){
+  let f = document.getElementById('dSubField');
+  if(f) return f;
+  const cat = document.getElementById('dCat'); if(!cat) return null;
+  const wrap = cat.closest('.field') || cat.parentNode;
+  f = document.createElement('div');
+  f.className = 'field'; f.id = 'dSubField'; f.style.display = 'none';
+  f.innerHTML = '<label id="dSubLabel"></label><select id="dSub" autocomplete="off"></select>';
+  wrap.insertAdjacentElement('afterend', f);
+  return f;
+}
+// Écoute globale : fonctionne même si le formulaire est reconstruit ou si la valeur est restaurée par le navigateur
+document.addEventListener('change', e => { if(e.target && e.target.id === 'dCat') onDepCatChange(); });
+
 async function onDepCatChange(){
-  const catSel = document.getElementById('dCat'), field = document.getElementById('dSubField'), sub = document.getElementById('dSub');
+  const catSel = document.getElementById('dCat'), field = ensureSubField(), sub = document.getElementById('dSub');
   if(!catSel || !field || !sub) return;
   const cid = catSel.value;
   sub.innerHTML = ''; field.style.display = 'none';
@@ -1243,16 +1285,18 @@ async function onDepCatChange(){
     }catch(e){ depSubCache[cid] = []; }
   }
   if(catSel.value !== cid) return; // la catégorie a changé entre-temps
-  const tree = depSubCache[cid];
+  let tree = depSubCache[cid];
+  const c = categories.find(x => String(x.id) === cid);
+  const isOza = !!(c && c.slug === 'ozamarket');
+  // Sans réponse de api_filters.php : OZAMarket propose quand même ses sous-catégories (le serveur retrouve l'identifiant)
+  if(!tree.length && isOza) tree = SUB_DEFAULTS.map(k => ({ id:'k:' + k, name:SUB_META[k].name, children:[], _icon:SUB_META[k].icon }));
   if(!tree.length) return;
-  const opt = n => `<option value="${n.id}">${escapeHtml(subIcon(n) + ' ' + n.name)}</option>`;
+  const opt = n => `<option value="${n.id}">${escapeHtml((n._icon || subIcon(n)) + ' ' + n.name)}</option>`;
   sub.innerHTML = '<option value="">Choisir…</option>' + tree.map(n =>
     (n.children && n.children.length)
       ? `<optgroup label="${escapeHtml(n.name)}">${n.children.map(opt).join('')}</optgroup>`
       : opt(n)
   ).join('');
-  const c = categories.find(x => String(x.id) === cid);
-  const isOza = !!(c && c.slug === 'ozamarket');
   document.getElementById('dSubLabel').textContent = 'Sous-catégorie' + (isOza ? ' *' : '');
   field.dataset.required = isOza ? '1' : '';
   field.style.display = '';
@@ -1403,8 +1447,8 @@ async function submitAd(){
   const title = v('dTitle'), cat = v('dCat'), city = v('dCity'), tel = v('dTel'), price = v('dPrice');
   if(title.length < 3) return msg.textContent = 'Le titre doit contenir au moins 3 caractères.';
   if(!cat) return msg.textContent = 'Choisissez une catégorie.';
-  const subField = document.getElementById('dSubField'), subVal = document.getElementById('dSub').value;
-  if(subField.style.display !== 'none' && subField.dataset.required && !subVal) return msg.textContent = 'Choisissez une sous-catégorie.';
+  const subField = document.getElementById('dSubField'), subEl = document.getElementById('dSub'), subVal = subEl ? subEl.value : '';
+  if(subField && subField.style.display !== 'none' && subField.dataset.required && !subVal) return msg.textContent = 'Choisissez une sous-catégorie.';
   if(!city) return msg.textContent = 'La ville est requise.';
   if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = 'Le téléphone doit contenir exactement 10 chiffres.';
   if(price !== '' && (isNaN(price) || Number(price) < 0)) return msg.textContent = 'Prix invalide.';
@@ -1415,7 +1459,7 @@ async function submitAd(){
   const fd = new FormData();
   fd.append('title', title);
   fd.append('category_id', cat);
-  if(subVal) fd.append('subcategory_id', subVal);
+  if(subVal){ if(String(subVal).indexOf('k:') === 0) fd.append('subcategory_key', subVal.slice(2)); else fd.append('subcategory_id', subVal); }
   fd.append('description', v('dDesc'));
   fd.append('price', price);
   fd.append('city', city);
@@ -1965,6 +2009,7 @@ async function logout(){
 }
 
 // Chargement initial : catégories, annonces de l'accueil, état de connexion
+renderOza();
 loadCategories();
 loadListings(null, 'homeList');
 checkAuth();
