@@ -66,6 +66,24 @@ h3.section{font-size:16px;margin:0 0 12px;font-weight:700;}
   font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;}
 .chip.on{background:var(--orange);color:#fff;border-color:var(--orange);}
 
+/* OZAMarket */
+.oza-box{background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:20px;padding:16px 0 14px;margin-bottom:22px;color:#fff;
+  box-shadow:0 8px 20px -6px rgba(109,40,217,.45);}
+.oza-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 16px;margin-bottom:12px;cursor:pointer;}
+.oza-head .tt{font-weight:800;font-size:17px;}
+.oza-head .ss{font-size:12px;opacity:.9;margin-top:2px;}
+.oza-head .all{background:rgba(255,255,255,.2);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;white-space:nowrap;}
+.oza-scroll{display:flex;gap:10px;overflow-x:auto;padding:2px 16px 4px;scrollbar-width:none;}
+.oza-scroll::-webkit-scrollbar{display:none;}
+.oza-tile{flex:0 0 84px;background:#fff;color:var(--text);border-radius:16px;padding:12px 6px;text-align:center;cursor:pointer;transition:transform .1s;}
+.oza-tile:active{transform:scale(.94);}
+.oza-tile .ico{font-size:26px;margin-bottom:6px;}
+.oza-tile .lab{font-size:10.5px;font-weight:700;line-height:1.25;color:#4c1d95;}
+.subchips{display:flex;gap:8px;overflow-x:auto;margin:-6px 0 16px;padding-bottom:2px;scrollbar-width:none;}
+.subchips:empty{display:none;}
+.subchip{flex-shrink:0;padding:6px 13px;border-radius:999px;background:#f5f3ff;border:1px solid #ddd6fe;font-size:12.5px;font-weight:600;color:#6d28d9;cursor:pointer;}
+.subchip.on{background:#8b5cf6;color:#fff;border-color:#8b5cf6;}
+
 /* CTA banner */
 .banner{position:relative;overflow:hidden;background:linear-gradient(135deg,#fb923c,#dc2626);border-radius:20px;
   padding:22px;color:#fff;margin-bottom:22px;box-shadow:0 8px 20px -6px rgba(220,38,38,.45);}
@@ -251,6 +269,7 @@ nav button.active{color:var(--orange-dark);}
   <div class="screen active" id="s-accueil">
     <div class="search"><span>🔍</span><input id="homeQ" placeholder="Que recherchez-vous ?" enterkeyhint="search">
   <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doHomeSearch()">Rechercher</button></div>
+    <div id="ozaSection"></div>
     <div class="cats" id="catsGrid"></div>
     <div class="banner">
       <b>Une seconde vie pour vos objets 🌿</b>
@@ -270,6 +289,7 @@ nav button.active{color:var(--orange-dark);}
   </div>
   <div id="fltSummary" style="font-size:12.5px;color:var(--muted);margin:0 2px 10px;"></div>
   <div class="chips" id="chipsRow"></div>
+  <div class="subchips" id="subChipsRow"></div>
   <div class="ad-list" id="fullList"></div>
 </div>
 
@@ -361,6 +381,66 @@ let categories = [];
 let catsExpanded = false;
 let currentCategoryId = null;
 
+/* ---------- OZAMarket : sous-catégories ---------- */
+// Icône de chaque sous-catégorie, reconnue à partir de son nom (les noms viennent de la base)
+const SUB_RULES = [
+  [/electromenag|électroménag/i, '🔌'], [/electronique|électronique|multim/i, '📱'], [/meuble/i, '🛋️'],
+  [/bricol/i, '🛠️'], [/vetement|vêtement/i, '👕'], [/jardin/i, '🌿'], [/sant[eé]|param[eé]d/i, '🩺'],
+  [/jeux|jouet/i, '🧸'], [/autre/i, '➕']
+];
+function subIcon(n){ const s = ((n.slug||'') + ' ' + (n.name||'')); for(const [re,ic] of SUB_RULES){ if(re.test(s)) return ic; } return '📦'; }
+
+function ozaCat(){ return categories.find(c => c.slug === 'ozamarket') || null; }
+let ozaSubs = { id:null, nodes:[] };
+async function loadOzaSubs(){
+  const c = ozaCat(); if(!c) return [];
+  if(ozaSubs.id === c.id && ozaSubs.nodes.length) return ozaSubs.nodes;
+  try{
+    const d = await apiFetch('/api_filters.php?category_id=' + c.id);
+    ozaSubs = { id: c.id, nodes: (d && d.success && d.tree) ? d.tree : [] };
+  }catch(e){ ozaSubs = { id: c.id, nodes: [] }; }
+  return ozaSubs.nodes;
+}
+
+// Bloc OZAMarket de l'accueil : bandeau violet + sous-catégories défilantes
+async function renderOza(){
+  const el = document.getElementById('ozaSection'); if(!el) return;
+  const c = ozaCat();
+  if(!c){ el.innerHTML = ''; return; }
+  const nodes = await loadOzaSubs();
+  el.innerHTML = `<div class="oza-box">
+    <div class="oza-head" onclick="pickOzaSub(null)">
+      <div><div class="tt">🛒 OZAMarket</div><div class="ss">Achetez et vendez près de chez vous</div></div>
+      <span class="all">Voir tout ›</span>
+    </div>
+    <div class="oza-scroll">${nodes.map(n =>
+      `<div class="oza-tile" onclick="pickOzaSub(${n.id})"><div class="ico">${subIcon(n)}</div><div class="lab">${escapeHtml(n.name)}</div></div>`
+    ).join('')}</div>
+  </div>`;
+}
+
+// Puces de sous-catégories dans l'écran Annonces quand OZAMarket est sélectionné
+async function renderSubChips(){
+  const el = document.getElementById('subChipsRow'); if(!el) return;
+  const c = ozaCat();
+  if(!c || currentCategoryId !== c.id){ el.innerHTML = ''; return; }
+  const nodes = await loadOzaSubs();
+  if(currentCategoryId !== c.id){ el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="subchip ${!searchFilters.subId?'on':''}" onclick="pickOzaSub(null)">Tout OZAMarket</div>` +
+    nodes.map(n => `<div class="subchip ${searchFilters.subId===n.id?'on':''}" onclick="pickOzaSub(${n.id})">${subIcon(n)} ${escapeHtml(n.name)}</div>`).join('');
+}
+
+async function pickOzaSub(subId){
+  const c = ozaCat(); if(!c) return;
+  const nodes = await loadOzaSubs();
+  const n = subId ? nodes.find(x => x.id === subId) : null;
+  currentCategoryId = c.id;
+  searchFilters.subId = n ? n.id : null;
+  searchFilters.subLabel = n ? n.name : '';
+  searchFilters.type = '';
+  runSearch(); go('annonces'); renderChips();
+}
+
 async function loadCategories(){
   try{
     const res = await fetch(API_BASE + '/api_categories.php');
@@ -375,7 +455,8 @@ async function loadCategories(){
 function renderCats(){
   const el = document.getElementById('catsGrid');
   if(!categories.length){ el.innerHTML = '<p style="color:#999;font-size:13px;grid-column:1/-1">Chargement des catégories…</p>'; return; }
-  let list = categories;
+  let list = categories.filter(c => c.slug !== 'ozamarket');
+  renderOza();
   let items;
   if(!catsExpanded){
     items = list.slice(0,3).map(c=>{
@@ -400,6 +481,7 @@ function renderChips(){
       return `<div class="chip ${currentCategoryId===c.id?'on':''}" onclick="filterByCategory(${c.id})">${m.icon} ${m.label}</div>`;
     }));
   el.innerHTML = chips.join('');
+  renderSubChips();
 }
 
 function filterByCategory(categoryId){
@@ -1111,8 +1193,12 @@ function renderDeposerForm(){
     <div id="dThumbs" class="img-thumb-row"></div>
     <div class="field"><label>Titre *</label><input id="dTitle" maxlength="120" placeholder="Ex : Vélo électrique en très bon état"></div>
     <div class="field"><label>Catégorie *</label><select id="dCat"></select></div>
+    <div class="field" id="dSubField" style="display:none"><label id="dSubLabel">Sous-catégorie</label><select id="dSub"></select></div>
     <div class="field"><label>Prix (€)</label><input id="dPrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Laisser vide si non précisé"></div>
-    <div class="field"><label>Description</label><textarea id="dDesc" rows="4" placeholder="Décrivez votre bien : état, caractéristiques…"></textarea></div>
+    <div class="field"><label>Description</label>
+      <button type="button" class="btn ghost small" id="dAiBtn" style="margin-bottom:8px;" onclick="generateDescription()">✨ Générer une description</button>
+      <textarea id="dDesc" rows="5" placeholder="Décrivez votre bien : état, caractéristiques…"></textarea>
+      <div id="dAiHint" style="display:none;font-size:12.5px;line-height:1.45;margin-top:6px;border-radius:10px;padding:9px 11px;"></div></div>
     <div class="field"><label>Ville *</label><input id="dCity" list="dCityList" autocomplete="off" placeholder="Tapez une ville"></div>
     <div class="field"><label>Téléphone (10 chiffres)</label><input id="dTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
     <div id="dMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
@@ -1120,8 +1206,10 @@ function renderDeposerForm(){
   `;
   document.getElementById('dPhotoInput').addEventListener('change', onPhotosPicked);
   document.getElementById('dTel').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
+  document.getElementById('dTitle').addEventListener('blur', scheduleAutoDescription);
   bindCityAutocomplete('dCity', 'dCityList');
   fillDeposerCategories();
+  document.getElementById('dCat').addEventListener('change', onDepCatChange);
   // Préremplit le téléphone depuis le profil
   apiFetch('/api_profile.php').then(d => {
     const t = document.getElementById('dTel');
@@ -1140,6 +1228,36 @@ function fillDeposerCategories(){
   if(prev) sel.value = prev;
 }
 
+// Sous-catégories du formulaire de dépôt (affichées dès que la catégorie en possède)
+const depSubCache = {};
+async function onDepCatChange(){
+  const catSel = document.getElementById('dCat'), field = document.getElementById('dSubField'), sub = document.getElementById('dSub');
+  if(!catSel || !field || !sub) return;
+  const cid = catSel.value;
+  sub.innerHTML = ''; field.style.display = 'none';
+  if(!cid) return;
+  if(!depSubCache[cid]){
+    try{
+      const d = await apiFetch('/api_filters.php?category_id=' + cid);
+      depSubCache[cid] = (d && d.success && d.tree) ? d.tree : [];
+    }catch(e){ depSubCache[cid] = []; }
+  }
+  if(catSel.value !== cid) return; // la catégorie a changé entre-temps
+  const tree = depSubCache[cid];
+  if(!tree.length) return;
+  const opt = n => `<option value="${n.id}">${escapeHtml(subIcon(n) + ' ' + n.name)}</option>`;
+  sub.innerHTML = '<option value="">Choisir…</option>' + tree.map(n =>
+    (n.children && n.children.length)
+      ? `<optgroup label="${escapeHtml(n.name)}">${n.children.map(opt).join('')}</optgroup>`
+      : opt(n)
+  ).join('');
+  const c = categories.find(x => String(x.id) === cid);
+  const isOza = !!(c && c.slug === 'ozamarket');
+  document.getElementById('dSubLabel').textContent = 'Sous-catégorie' + (isOza ? ' *' : '');
+  field.dataset.required = isOza ? '1' : '';
+  field.style.display = '';
+}
+
 async function onPhotosPicked(e){
   const files = Array.from(e.target.files || []);
   e.target.value = '';
@@ -1154,6 +1272,7 @@ async function onPhotosPicked(e){
     }catch(err){ msg.textContent = 'Photo illisible : ' + file.name; }
   }
   renderDPhotos();
+  scheduleAutoDescription();
 }
 
 // Réduit la photo (max 1600 px, JPEG) : envoi plus rapide, moins de risque de dépasser les limites du serveur
@@ -1186,6 +1305,97 @@ function removeDPhoto(i){
   renderDPhotos();
 }
 
+/* ---------- DESCRIPTION AUTOMATIQUE (api_ad_describe.php) ---------- */
+const blobToB64 = b => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result.split(',')[1]); r.onerror = rej;
+  r.readAsDataURL(b);
+});
+
+let aiState = { sig:'', text:'', busy:false };
+const AI_TXT = {
+  need:"💡 Saisissez d'abord un titre (et si possible vos photos).",
+  busy:"✨ Rédaction en cours…", btn:"✨ Générer une description", again:"✨ Proposer une autre version",
+  ai:"✨ Proposition rédigée à partir de votre titre et de vos photos. Relisez-la et adaptez-la avant de publier.",
+  tpl:"📝 Modèle de description. Ajoutez les détails de votre bien avant de publier.",
+  todo:"À compléter : ", replace:"Remplacer la description actuelle ?"
+};
+
+function showAiHint(html, kind){
+  const el = document.getElementById('dAiHint'); if(!el) return;
+  if(!html){ el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const ok = kind === 'ok';
+  el.style.background = ok ? '#fff7ed' : '#f3f4f6';
+  el.style.color      = ok ? '#7c2d12' : '#555';
+  el.style.border     = '1px solid ' + (ok ? '#fed7aa' : '#e5e7eb');
+  el.innerHTML = html;
+}
+
+let autoTimer = null;
+function scheduleAutoDescription(){
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => generateDescription(true), 1200); // anti-rebond
+}
+
+async function generateDescription(auto){
+  auto = (auto === true); // true = déclenchement automatique, sinon clic sur le bouton
+  const ta = document.getElementById('dDesc'), btn = document.getElementById('dAiBtn');
+  if(!ta || !btn) return;
+  if(aiState.busy){ if(auto) scheduleAutoDescription(); return; }
+
+  const v = id => document.getElementById(id).value.trim();
+  const title = v('dTitle');
+  if(title.length < 3){ if(!auto) showAiHint(AI_TXT.need, 'info'); return; }
+
+  // Ne jamais écraser un texte saisi par l'annonceur
+  const cur = ta.value.trim();
+  const userText = cur !== '' && cur !== aiState.text;
+  if(auto && userText) return;
+  if(!auto && userText && !confirm(AI_TXT.replace)) return;
+
+  // Évite les appels inutiles (limite de 10 par heure)
+  const sel = document.getElementById('dCat');
+  const subSel = document.getElementById('dSub');
+  const subTxt = (subSel && subSel.value) ? subSel.options[subSel.selectedIndex].text.replace(/^\S+\s/, '') : '';
+  const sig = title + '|' + sel.value + '|' + (subSel ? subSel.value : '') + '|' + dPhotos.slice(0,3).map(p => p.blob.size).join(',');
+  if(auto && sig === aiState.sig) return;
+  aiState.sig = sig;
+
+  aiState.busy = true; btn.disabled = true; btn.textContent = AI_TXT.busy;
+  showAiHint(AI_TXT.busy, 'info');
+  try{
+    const photos = [];
+    for(const p of dPhotos.slice(0, 3)) photos.push(await blobToB64(await downscaleImage(p.blob, 768, 0.7)));
+    const payload = {
+      title: title,
+      category: sel.value ? sel.options[sel.selectedIndex].text : '',
+      subcategory: subTxt,
+      city: v('dCity'),
+      price: v('dPrice'),
+      lang: 'fr',
+      photos: photos,
+      currency: '€'
+    };
+    const data = await apiFetch('/api_ad_describe.php', {method:'POST', body: JSON.stringify(payload)});
+    if(data.success){
+      ta.value = data.description; aiState.text = data.description;
+      if(data.debug) console.warn('Diagnostic IA :', data.debug);
+      showAiHint((data.source === 'ai' ? AI_TXT.ai : AI_TXT.tpl)
+        + (data.todo ? '<br><b>' + AI_TXT.todo + '</b>' + escapeHtml(data.todo) : ''), 'ok');
+      btn.textContent = AI_TXT.again;
+    } else {
+      showAiHint(escapeHtml(data.error || 'Une erreur est survenue.'), 'info');
+      btn.textContent = AI_TXT.btn;
+    }
+  }catch(e){
+    console.warn('describe error', e);
+    showAiHint('Erreur réseau.', 'info');
+    btn.textContent = AI_TXT.btn;
+  }
+  btn.disabled = false; aiState.busy = false;
+}
+
 async function submitAd(){
   const v = id => document.getElementById(id).value.trim();
   const msg = document.getElementById('dMsg');
@@ -1193,6 +1403,8 @@ async function submitAd(){
   const title = v('dTitle'), cat = v('dCat'), city = v('dCity'), tel = v('dTel'), price = v('dPrice');
   if(title.length < 3) return msg.textContent = 'Le titre doit contenir au moins 3 caractères.';
   if(!cat) return msg.textContent = 'Choisissez une catégorie.';
+  const subField = document.getElementById('dSubField'), subVal = document.getElementById('dSub').value;
+  if(subField.style.display !== 'none' && subField.dataset.required && !subVal) return msg.textContent = 'Choisissez une sous-catégorie.';
   if(!city) return msg.textContent = 'La ville est requise.';
   if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = 'Le téléphone doit contenir exactement 10 chiffres.';
   if(price !== '' && (isNaN(price) || Number(price) < 0)) return msg.textContent = 'Prix invalide.';
@@ -1203,6 +1415,7 @@ async function submitAd(){
   const fd = new FormData();
   fd.append('title', title);
   fd.append('category_id', cat);
+  if(subVal) fd.append('subcategory_id', subVal);
   fd.append('description', v('dDesc'));
   fd.append('price', price);
   fd.append('city', city);
