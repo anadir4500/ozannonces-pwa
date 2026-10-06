@@ -1651,8 +1651,10 @@ function buildUrl(targetId, page, categoryId){
     return u;
   }
   const f = searchFilters, p = new URLSearchParams({ page });
-  if(categoryId)  p.set('category_id', categoryId);
-  if(f.subId)     p.set('subcategory_id', f.subId);
+  // Une sous-catégorie identifie déjà sa catégorie : on n'envoie pas category_id avec elle
+  // (le serveur résout lui-même les sous-niveaux).
+  if(f.subId)          p.set('subcategory_id', f.subId);
+  else if(categoryId)  p.set('category_id', categoryId);
   if(f.q)         p.set('q', f.q);
   if(f.city)      p.set('city', f.city);
   if(f.priceMin !== '') p.set('price_min', f.priceMin);
