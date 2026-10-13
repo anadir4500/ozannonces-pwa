@@ -2077,6 +2077,11 @@ renderOza();
 loadCategories();
 loadListings(null, 'homeList');
 checkAuth();
+// Retour depuis la page de paiement : lien direct vers « Mes annonces »
+if(location.hash === '#mes-annonces'){
+  history.replaceState(null, '', location.pathname + location.search);
+  if(localStorage.getItem('oz_sid')) openMesAnnonces();
+}
 </script>
 </body>
 </html>
