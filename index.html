@@ -1012,9 +1012,71 @@ async function deleteAd(id){
     if(data.success){ openMesAnnonces(); } else { alert(data.error || 'Erreur lors de la suppression.'); }
   }catch(e){ alert('Erreur réseau.'); }
 }
+/* ---------- BOOST / PAIEMENT (mêmes options et mêmes prix que le desktop) ---------- */
+// Les prix affichés ici sont indicatifs : le serveur (payment_gateway.php) recalcule toujours le total.
+const IS_MA = API_BASE.endsWith('.ma');
+const BOOST_CUR = IS_MA ? 'DH' : '€';
+const BOOST_DUR = IS_MA ? {'3days':20,'7days':60,'30days':100,'8weeks':150} : {'3days':2,'7days':6,'30days':10,'8weeks':15};
+const BOOST_DUR_LABEL = {'3days':'3 jours','7days':'7 jours','30days':'30 jours','8weeks':'8 semaines'};
+const BOOST_URGENT = IS_MA ? 30 : 10;
+const BOOST_PHOTO  = IS_MA ? 25 : 10;
+let boostPending = false;
+
 function openBoostExternal(id){
-  window.open(API_BASE + '/payment_gateway.php?annonce_id=' + id + '&source=app', '_system');
+  openSubpage('Booster mon annonce', 'ads-edit');
+  const durOpts = Object.keys(BOOST_DUR).map(k =>
+    `<option value="${k}">${BOOST_DUR_LABEL[k]} — ${BOOST_DUR[k]} ${BOOST_CUR}</option>`).join('');
+  const row = (inputId, title, sub, price) => `
+    <label style="display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;">
+      <input type="checkbox" id="${inputId}" onchange="updateBoostTotal()" style="width:20px;height:20px;margin-top:2px;accent-color:var(--orange);">
+      <span style="flex:1;"><b style="font-size:14.5px;">${title}</b><br><span style="font-size:12.5px;color:var(--muted);">${sub}</span></span>
+      <b style="color:var(--orange-dark);white-space:nowrap;">${price}</b>
+    </label>`;
+  document.getElementById('subpageBody').innerHTML = `
+    ${row('bAuto', '🔝 Remontée automatique', 'Votre annonce remonte en tête de liste', 'dès ' + Math.min(...Object.values(BOOST_DUR)) + ' ' + BOOST_CUR)}
+    <div class="field" id="bDurWrap" style="display:none;"><label>Durée</label><select id="bDur" onchange="updateBoostTotal()">${durOpts}</select></div>
+    ${row('bUrgent', '⚡ Badge Urgent', 'Badge visible sur l\'annonce', BOOST_URGENT + ' ' + BOOST_CUR)}
+    ${row('bPhoto', '🖼️ Mise en avant photo', 'Cadre doré autour de la photo', BOOST_PHOTO + ' ' + BOOST_CUR)}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 2px;">
+      <span style="font-weight:700;">Total</span><span id="bTotal" style="font-size:20px;font-weight:800;color:var(--orange-dark);">0 ${BOOST_CUR}</span>
+    </div>
+    <div id="bMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="bPay" onclick="payBoost(${id})">Payer (PayPal / Carte / Virement)</button>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;">Le paiement s'ouvre dans votre navigateur, sur la page sécurisée du site.</p>`;
+  updateBoostTotal();
 }
+function updateBoostTotal(){
+  const auto = document.getElementById('bAuto').checked;
+  document.getElementById('bDurWrap').style.display = auto ? 'block' : 'none';
+  let total = 0;
+  if(auto) total += BOOST_DUR[document.getElementById('bDur').value] || 0;
+  if(document.getElementById('bUrgent').checked) total += BOOST_URGENT;
+  if(document.getElementById('bPhoto').checked)  total += BOOST_PHOTO;
+  document.getElementById('bTotal').textContent = total + ' ' + BOOST_CUR;
+}
+async function payBoost(id){
+  const msg = document.getElementById('bMsg'), btn = document.getElementById('bPay');
+  msg.textContent = '';
+  const auto = document.getElementById('bAuto').checked;
+  const urgent = document.getElementById('bUrgent').checked;
+  const photo = document.getElementById('bPhoto').checked;
+  if(!auto && !urgent && !photo){ msg.textContent = 'Choisissez au moins une option.'; return; }
+  btn.disabled = true;
+  try{
+    // Le serveur renvoie une URL à usage unique qui ouvre la session dans le navigateur
+    const data = await apiFetch('/api_pay_token.php', {method:'POST', body: JSON.stringify({
+      annonce_id: id, auto_boost: auto, boost_duration: document.getElementById('bDur').value,
+      urgent_badge: urgent, photo_highlight: photo
+    })});
+    if(data.success && data.url){ boostPending = true; window.open(data.url, '_system'); }
+    else { msg.textContent = data.error || 'Erreur.'; }
+  }catch(e){ msg.textContent = 'Erreur réseau.'; }
+  btn.disabled = false;
+}
+// Retour dans l'app après le paiement : on recharge la liste pour afficher le nouveau statut
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && boostPending){ boostPending = false; openMesAnnonces(); }
+});
 
 /* ---------- MA MESSAGERIE ---------- */
 let currentChat = { annonceId:null, otherUserId:null, conversationId:null };
