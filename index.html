@@ -1070,7 +1070,7 @@ async function payBoost(id){
     })});
     if(data.success && data.url){ boostPending = true; window.open(data.url, '_system'); }
     else { msg.textContent = data.error || 'Erreur.'; }
-  }catch(e){ msg.textContent = 'Erreur réseau.'; }
+  }catch(e){ msg.textContent = 'Erreur réseau (' + (e && e.message ? e.message : e) + ')'; }
   btn.disabled = false;
 }
 // Retour dans l'app après le paiement : on recharge la liste pour afficher le nouveau statut
