@@ -223,6 +223,13 @@ nav button.active{color:var(--orange-dark);}
   box-shadow:0 1px 3px rgba(0,0,0,.25);}
 [dir=rtl] .new-badge{left:auto;right:10px;border-radius:0 14px 0 8px;}
 
+.ad-flags{position:absolute;top:8px;right:10px;display:flex;gap:4px;z-index:2;}
+[dir=rtl] .ad-flags{right:auto;left:10px;}
+.ad-flag{color:#fff;font-size:9px;font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:10px;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);}
+.ad-flag.boost{background:#f59e0b;}
+.ad-flag.urgent{background:#dc2626;}
+.ad-thumb.gold{box-shadow:0 0 0 3px #f5b301;}
 
 /* Visionneuse photos (lightbox) */
 #lightbox{position:absolute;inset:0;background:#000;z-index:50;display:none;flex-direction:column;}
@@ -569,6 +576,12 @@ async function loadMoreListings(targetId){
   }
 }
 
+function flagsHtml(a){
+  const out = (a.boosted ? '<span class="ad-flag boost">⭐ À LA UNE</span>' : '')
+            + (a.urgent  ? '<span class="ad-flag urgent">⚡ URGENT</span>' : '');
+  return out ? `<div class="ad-flags">${out}</div>` : '';
+}
+
 function renderList(targetId, list, total){
   const el = document.getElementById(targetId);
   if(!list.length){
@@ -582,8 +595,9 @@ function renderList(targetId, list, total){
       ? `<img src="${a.image}" alt="" onerror="this.outerHTML='<span>${m.icon}</span>'">`
       : `<span>${m.icon}</span>`;
     return `
-    <div class="ad-card" onclick="openDetail(${i})">
-      <div class="ad-thumb" style="background:${m.color}">
+        <div class="ad-card" onclick="openDetail(${i})">
+      ${flagsHtml(a)}
+      <div class="ad-thumb${a.photo_highlight ? ' gold' : ''}" style="background:${m.color}">
         ${thumbInner}
       </div>
       <div class="ad-info">
@@ -1068,7 +1082,11 @@ async function payBoost(id){
       annonce_id: id, auto_boost: auto, boost_duration: document.getElementById('bDur').value,
       urgent_badge: urgent, photo_highlight: photo
     })});
-    if(data.success && data.url){ boostPending = true; window.open(data.url, '_system'); }
+    if(data.success && data.url){
+      boostPending = true;
+      const B = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+      if (B) B.open({ url: data.url }); else window.open(data.url, '_blank');
+    }
     else { msg.textContent = data.error || 'Erreur.'; }
   }catch(e){ msg.textContent = 'Erreur réseau (' + (e && e.message ? e.message : e) + ')'; }
   btn.disabled = false;
