@@ -35,7 +35,9 @@ header .sub{color:var(--muted);font-size:14px;margin-top:2px;}
 /* Search */
 .search{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
   border-radius:16px;padding:14px 16px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.search input{border:none;outline:none;flex:1;font-size:15px;background:transparent;}
+.search input{border:none;outline:none;flex:1 1 0;min-width:0;width:0;font-size:15px;background:transparent;}
+.search{box-sizing:border-box;max-width:100%;gap:8px;}
+.search .btn{white-space:nowrap;}
 .search span{font-size:18px;}
 
 /* Category grid */
@@ -358,6 +360,101 @@ nav button.active{color:var(--orange-dark);}
 
 <script>
 const API_BASE = 'https://www.ozannonces.fr';
+
+/* ===== Conformité Google Play : liens externes, signalement, blocage, suppression de compte ===== */
+// Les achats de boosts ne sont pas proposés dans l'app (règles de paiement de Google Play) : ils restent sur le site.
+const OZ_BOOST_IN_APP = false;
+const OZ_TX = {
+  fr:{report_btn:'🚩 Signaler cette annonce',report_user:'🚩 Signaler',block_user:'🚫 Bloquer',report_title:'Signaler',report_reason:'Motif du signalement',
+      r_spam:'Spam ou publicité',r_fraud:'Arnaque ou fraude',r_illegal:'Contenu illégal ou interdit',r_offensive:'Contenu offensant ou inapproprié',r_other:'Autre motif',
+      report_comment:'Précisions (facultatif)',report_send:'Envoyer le signalement',report_thanks:'Merci, votre signalement a bien été envoyé.',
+      block_confirm:'Bloquer cet utilisateur ? Il ne pourra plus vous écrire.',block_done:'Utilisateur bloqué.',
+      del_btn:'Supprimer mon compte',del_confirm1:'Voulez-vous vraiment supprimer votre compte ?',del_confirm2:'Votre compte et vos données seront supprimés définitivement. Cette action est irréversible. Confirmer ?',
+      del_done:'Votre compte a été supprimé.',err:'Une erreur est survenue.',neterr:'Erreur réseau.',privacy:'Politique de confidentialité',terms:"Conditions d'utilisation"},
+  en:{report_btn:'🚩 Report this ad',report_user:'🚩 Report',block_user:'🚫 Block',report_title:'Report',report_reason:'Reason for reporting',
+      r_spam:'Spam or advertising',r_fraud:'Scam or fraud',r_illegal:'Illegal or prohibited content',r_offensive:'Offensive or inappropriate content',r_other:'Other reason',
+      report_comment:'Details (optional)',report_send:'Send report',report_thanks:'Thank you, your report has been sent.',
+      block_confirm:'Block this user? They will no longer be able to message you.',block_done:'User blocked.',
+      del_btn:'Delete my account',del_confirm1:'Do you really want to delete your account?',del_confirm2:'Your account and data will be permanently deleted. This cannot be undone. Confirm?',
+      del_done:'Your account has been deleted.',err:'An error occurred.',neterr:'Network error.',privacy:'Privacy policy',terms:'Terms of use'},
+  es:{report_btn:'🚩 Denunciar este anuncio',report_user:'🚩 Denunciar',block_user:'🚫 Bloquear',report_title:'Denunciar',report_reason:'Motivo de la denuncia',
+      r_spam:'Spam o publicidad',r_fraud:'Estafa o fraude',r_illegal:'Contenido ilegal o prohibido',r_offensive:'Contenido ofensivo o inapropiado',r_other:'Otro motivo',
+      report_comment:'Detalles (opcional)',report_send:'Enviar denuncia',report_thanks:'Gracias, su denuncia ha sido enviada.',
+      block_confirm:'¿Bloquear a este usuario? Ya no podrá escribirle.',block_done:'Usuario bloqueado.',
+      del_btn:'Eliminar mi cuenta',del_confirm1:'¿Realmente desea eliminar su cuenta?',del_confirm2:'Su cuenta y sus datos se eliminarán definitivamente. Esta acción es irreversible. ¿Confirmar?',
+      del_done:'Su cuenta ha sido eliminada.',err:'Ha ocurrido un error.',neterr:'Error de red.',privacy:'Política de privacidad',terms:'Condiciones de uso'},
+  ar:{report_btn:'🚩 الإبلاغ عن هذا الإعلان',report_user:'🚩 إبلاغ',block_user:'🚫 حظر',report_title:'إبلاغ',report_reason:'سبب الإبلاغ',
+      r_spam:'محتوى مزعج أو دعائي',r_fraud:'احتيال أو نصب',r_illegal:'محتوى غير قانوني أو ممنوع',r_offensive:'محتوى مسيء أو غير لائق',r_other:'سبب آخر',
+      report_comment:'تفاصيل (اختياري)',report_send:'إرسال البلاغ',report_thanks:'شكرًا، تم إرسال بلاغك.',
+      block_confirm:'حظر هذا المستخدم؟ لن يتمكن من مراسلتك بعد الآن.',block_done:'تم حظر المستخدم.',
+      del_btn:'حذف حسابي',del_confirm1:'هل تريد حقًا حذف حسابك؟',del_confirm2:'سيتم حذف حسابك وبياناتك نهائيًا. لا يمكن التراجع عن هذا الإجراء. هل تؤكد؟',
+      del_done:'تم حذف حسابك.',err:'حدث خطأ.',neterr:'خطأ في الشبكة.',privacy:'سياسة الخصوصية',terms:'شروط الاستخدام'}
+};
+function ozT(k){
+  const l = (typeof LANG !== 'undefined' && OZ_TX[LANG]) ? LANG : 'fr';
+  return OZ_TX[l][k] || OZ_TX.fr[k] || k;
+}
+// Ouvre un lien dans le navigateur du téléphone (Capacitor, Cordova ou navigateur classique)
+function openExternal(url){
+  try{
+    const B = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+    if(B && B.open){ B.open({ url: url }); return; }
+    if(window.cordova){ window.open(url, '_system'); return; }
+  }catch(e){}
+  window.open(url, '_blank');
+}
+let reportReturn = null, reportAnnonceId = 0;
+function openReport(type, id){
+  reportReturn = null; reportAnnonceId = 0;
+  if(type === 'user' && typeof currentChat !== 'undefined' && currentChat){
+    const c = currentChat, st = (subpageMode === 'msg-chat-standalone');
+    reportReturn = () => openChat(c.annonceId, c.otherUserId, st);
+    reportAnnonceId = Number(c.annonceId) || 0;
+  }
+  openSubpage(ozT('report_title'), 'report');
+  const reasons = [['spam','r_spam'],['fraud','r_fraud'],['illegal','r_illegal'],['offensive','r_offensive'],['other','r_other']];
+  const radios = reasons.map((r, i) =>
+    `<label style="display:flex;align-items:center;gap:10px;padding:10px 0;font-size:14.5px;"><input type="radio" name="rpReason" value="${r[0]}" ${i===0?'checked':''} style="width:20px;height:20px;accent-color:var(--orange);">${ozT(r[1])}</label>`).join('');
+  document.getElementById('subpageBody').innerHTML = `
+    <div style="font-weight:700;margin-bottom:4px;">${ozT('report_reason')}</div>
+    ${radios}
+    <div class="field" style="margin-top:12px;"><label>${ozT('report_comment')}</label><textarea id="rpComment" rows="3" maxlength="500"></textarea></div>
+    <div id="rpMsg" style="font-size:13px;margin-bottom:10px;"></div>
+    <button class="btn" id="rpBtn" onclick="submitReport('${type}',${Number(id)})">${ozT('report_send')}</button>`;
+}
+async function submitReport(type, id){
+  const msg = document.getElementById('rpMsg'), btn = document.getElementById('rpBtn');
+  const sel = document.querySelector('input[name="rpReason"]:checked');
+  btn.disabled = true; msg.style.color = 'var(--muted)'; msg.textContent = '…';
+  try{
+    const d = await apiFetch('/api_report.php', {method:'POST', body: JSON.stringify({
+      type: type, id: id, annonce_id: reportAnnonceId, reason: sel ? sel.value : 'other', comment: document.getElementById('rpComment').value.trim() })});
+    if(d.success){
+      msg.style.color = '#16a34a'; msg.textContent = ozT('report_thanks');
+      setTimeout(() => { if(reportReturn) reportReturn(); else closeSubpage(); }, 1300);
+      return;
+    }
+    msg.style.color = '#dc2626'; msg.textContent = d.error || ozT('err');
+  }catch(e){ msg.style.color = '#dc2626'; msg.textContent = ozT('neterr'); }
+  btn.disabled = false;
+}
+async function blockUser(userId){
+  if(!confirm(ozT('block_confirm'))) return;
+  try{
+    const d = await apiFetch('/api_block_user.php', {method:'POST', body: JSON.stringify({ user_id: userId })});
+    if(d.success){ alert(ozT('block_done')); if(subpageMode === 'msg-chat') openMessagerie(); else closeSubpage(); }
+    else alert(d.error || ozT('err'));
+  }catch(e){ alert(ozT('neterr')); }
+}
+async function deleteAccount(){
+  if(!confirm(ozT('del_confirm1'))) return;
+  if(!confirm(ozT('del_confirm2'))) return;
+  try{
+    const d = await apiFetch('/api_delete_account.php', {method:'POST', body: JSON.stringify({ confirm: true })});
+    if(d.success){ alert(ozT('del_done')); await logout(); }
+    else alert(d.error || ozT('err'));
+  }catch(e){ alert(ozT('neterr')); }
+}
 
 // Les cookies tiers étant bloqués par les WebView, on renvoie l'ID de session en en-tête
 const _origFetch = window.fetch.bind(window);
@@ -840,6 +937,7 @@ const gallery = a.images.length
       <div class="dt-h">Description</div>
       <div class="dt-desc">${escapeHtml(a.description || 'Aucune description disponible')}</div>
       ${attrs}${seller}${sim}
+      ${d.is_owner ? '' : `<button class="btn ghost small" style="margin-top:16px;" onclick="openReport('annonce',${a.id})">${ozT('report_btn')}</button>`}
     </div>`;
 
   const f = document.getElementById('detailFooter');
@@ -880,6 +978,7 @@ function closeSubpage(){
 function subpageBack(){
   if(subpageMode === 'ads-edit'){ openMesAnnonces(); }
   else if(subpageMode === 'msg-chat'){ openMessagerie(); }
+  else if(subpageMode === 'report'){ if(reportReturn) reportReturn(); else closeSubpage(); }
   else { closeSubpage(); } // couvre aussi 'msg-chat-standalone' (retour vers la fiche annonce)
 }
 
@@ -977,7 +1076,7 @@ async function openAdEdit(id){
       <div id="adMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
       <button class="btn" onclick="submitAdUpdate(${a.id})">Enregistrer</button>
       <button class="btn danger" style="margin-top:10px;" onclick="confirmDeleteAd(${a.id})">Supprimer l'annonce</button>
-      <button class="btn ghost" style="margin-top:10px;" onclick="openBoostExternal(${a.id})">🚀 Booster cette annonce</button>
+      ${OZ_BOOST_IN_APP ? `<button class="btn ghost" style="margin-top:10px;" onclick="openBoostExternal(${a.id})">🚀 Booster cette annonce</button>` : ''}
     `;
     renderAdImgRow();
   }catch(e){
@@ -1037,6 +1136,7 @@ const BOOST_PHOTO  = IS_MA ? 25 : 10;
 let boostPending = false;
 
 function openBoostExternal(id){
+  if(!OZ_BOOST_IN_APP) return;
   openSubpage('Booster mon annonce', 'ads-edit');
   const durOpts = Object.keys(BOOST_DUR).map(k =>
     `<option value="${k}">${BOOST_DUR_LABEL[k]} — ${BOOST_DUR[k]} ${BOOST_CUR}</option>`).join('');
@@ -1085,7 +1185,7 @@ async function payBoost(id){
     if(data.success && data.url){
       boostPending = true;
       const B = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
-      if (B) B.open({ url: data.url }); else window.open(data.url, '_blank');
+      openExternal(data.url);
     }
     else { msg.textContent = data.error || 'Erreur.'; }
   }catch(e){ msg.textContent = 'Erreur réseau (' + (e && e.message ? e.message : e) + ')'; }
@@ -1154,9 +1254,10 @@ async function openChat(annonceId, otherUserId, standalone){
       <div class="msg ${m.type}">${escapeHtml(m.text)}<span class="mt">${new Date(m.time).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
     `).join('') || '<p class="subpage-loading">Pas encore de messages.</p>';
 
+    const chatActions = data.other_user_id ? `<div style="display:flex;gap:8px;padding:6px 0 10px;"><button class="btn ghost small" onclick="openReport('user',${Number(data.other_user_id)})">${ozT('report_user')}</button><button class="btn ghost small" onclick="blockUser(${Number(data.other_user_id)})">${ozT('block_user')}</button></div>` : '';
     document.getElementById('subpageBody').innerHTML = `
       <div id="chatWrap">
-        ${ownerHtml}
+        ${ownerHtml}${chatActions}
         <div id="chatMessages">${msgsHtml}</div>
         <form id="chatForm" onsubmit="return false;">
           <textarea id="chatInput" placeholder="Écrivez votre message…" ${!data.other_user_id ? 'disabled' : ''}></textarea>
@@ -1242,7 +1343,7 @@ async function openEspacePro(){
       ${jours.map(j=>`<div class="field"><label style="text-transform:capitalize">${j}</label><input id="proH_${j}" value="${escapeHtml((v.horaires && v.horaires[j]) || '')}" placeholder="Ex : 9h00 – 18h00"></div>`).join('')}
       <div id="proMsg" style="color:#dc2626;font-size:13px;margin:6px 0;"></div>
       <button class="btn" onclick="submitEspacePro()">Enregistrer les modifications</button>
-      ${v.statut==='actif' ? `<button class="btn ghost" style="margin-top:10px;" onclick="window.open('${API_BASE}/entreprise.php?slug=${v.slug}','_system')">Voir ma vitrine</button>` : ''}
+      ${v.statut==='actif' ? `<button class="btn ghost" style="margin-top:10px;" onclick="openExternal('${API_BASE}/entreprise.php?slug=${v.slug}')">Voir ma vitrine</button>` : ''}
     `;
   }catch(e){
     document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
@@ -1606,8 +1707,8 @@ function openRegister(){
     <div class="field"><label>Ville *</label><input id="rCity" list="rCityList" autocomplete="off" placeholder="Tapez une ville"></div>
     <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#555;margin:6px 0 14px;">
       <input type="checkbox" id="rTerms" style="margin-top:3px;">
-      <span>J'accepte les <a href="#" onclick="window.open(API_BASE+'/terms.php','_system');return false;">conditions d'utilisation</a>
-      et la <a href="#" onclick="window.open(API_BASE+'/privacy.php','_system');return false;">politique de confidentialité</a>.</span>
+      <span>J'accepte les <a href="#" onclick="openExternal(API_BASE+'/terms.php');return false;">conditions d'utilisation</a>
+      et la <a href="#" onclick="openExternal(API_BASE+'/privacy.php');return false;">politique de confidentialité</a>.</span>
     </label>
     <div id="rMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
     <button class="btn" id="rBtn" onclick="submitRegister()">S'inscrire</button>
@@ -2036,6 +2137,10 @@ function renderProfilLoggedIn(user){
     <div class="menu-row" onclick="openMesAnnonces()"><span class="l">📋 Mes annonces</span><span>›</span></div>
     <div class="menu-row" onclick="openMessagerie()"><span class="l">💬 Ma Messagerie</span><span>›</span></div>
     <button class="btn ghost" style="margin-top:14px;" onclick="logout()">Se déconnecter</button>
+    <button class="btn danger" style="margin-top:10px;" onclick="deleteAccount()">${ozT('del_btn')}</button>
+    <div style="text-align:center;margin-top:16px;font-size:12.5px;color:var(--muted);">
+      <a href="#" onclick="openExternal(API_BASE+'/privacy.php');return false;" style="color:var(--orange-dark);">${ozT('privacy')}</a> · <a href="#" onclick="openExternal(API_BASE+'/terms.php');return false;" style="color:var(--orange-dark);">${ozT('terms')}</a>
+    </div>
   `;
 }
 
