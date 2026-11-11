@@ -4,14 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ÔZAnnonces — App</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#f97316">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ÔZAnnonces">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
 <style>
 :root{
   --orange:#f97316; --orange-dark:#ea580c; --bg:#faf9f7; --card:#ffffff;
@@ -95,7 +87,6 @@ h3.section{font-size:16px;margin:0 0 12px;font-weight:700;}
 .subchips:empty{display:none;}
 .subchip{flex-shrink:0;padding:6px 13px;border-radius:999px;background:#f5f3ff;border:1px solid #ddd6fe;font-size:12.5px;font-weight:600;color:#6d28d9;cursor:pointer;}
 .subchip.on{background:#8b5cf6;color:#fff;border-color:#8b5cf6;}
-.cat.oza{border-color:#8b5cf6;}
 
 /* CTA banner */
 .banner{position:relative;overflow:hidden;background:linear-gradient(135deg,#fb923c,#dc2626);border-radius:20px;
@@ -212,6 +203,7 @@ nav button.active{color:var(--orange-dark);}
 .dt-h{font-size:14px;font-weight:700;margin:18px 0 8px;}
 .dt-desc{color:#555;line-height:1.5;font-size:14.5px;white-space:pre-line;}
 .dt-attr{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+
 .dt-attr span:first-child{color:var(--muted);}
 .dt-seller{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;font-size:14px;}
 .dt-phone{display:block;margin-top:8px;color:var(--orange-dark);font-weight:800;font-size:16px;text-decoration:none;}
@@ -234,6 +226,7 @@ nav button.active{color:var(--orange-dark);}
   font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:14px 0 8px 0;z-index:2;
   box-shadow:0 1px 3px rgba(0,0,0,.25);}
 [dir=rtl] .new-badge{left:auto;right:10px;border-radius:0 14px 0 8px;}
+
 .ad-flags{position:absolute;top:8px;right:10px;display:flex;gap:4px;z-index:2;}
 [dir=rtl] .ad-flags{right:auto;left:10px;}
 .ad-flag{color:#fff;font-size:9px;font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:10px;
@@ -242,7 +235,6 @@ nav button.active{color:var(--orange-dark);}
 .ad-flag.urgent{background:#dc2626;}
 .ad-thumb.gold{box-shadow:0 0 0 3px #f5b301;}
 
-/* Visionneuse photos (lightbox) */
 /* Visionneuse photos (lightbox) */
 #lightbox{position:absolute;inset:0;background:#000;z-index:50;display:none;flex-direction:column;}
 #lightbox.open{display:flex;}
@@ -280,30 +272,30 @@ nav button.active{color:var(--orange-dark);}
 
   <header>
     <div class="logo"><span class="o">Ô</span><span class="z">Z</span><span class="a">A</span><span class="rest">nnonces</span></div>
-    <select id="langSelect" onchange="setLang(this.value)" style="float:right;border:1px solid var(--border);border-radius:10px;padding:4px 6px;background:#fff;font-size:13px"><option value="fr">Français</option><option value="en">English</option><option value="ar">العربية</option><option value="es">Español</option></select>
-    <div class="greet" id="greetTxt" data-i18n="hdr.hello">Bonjour 👋</div>
-    <div class="sub" data-i18n="hdr.sub">Trouvez ce qu'il vous faut, en un instant</div>
+    <div class="greet" id="greetTxt">Bonjour 👋</div>
+    <div class="sub">Trouvez ce qu'il vous faut, en un instant</div>
   </header>
 
   <!-- ACCUEIL -->
   <div class="screen active" id="s-accueil">
-    <div class="search"><span>🔍</span><input id="homeQ" data-i18n-ph="home.search_ph" placeholder="Que recherchez-vous ?" enterkeyhint="search">
-  <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doHomeSearch()" data-i18n="home.search_btn">Rechercher</button></div>
+    <div class="search"><span>🔍</span><input id="homeQ" placeholder="Que recherchez-vous ?" enterkeyhint="search">
+  <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doHomeSearch()">Rechercher</button></div>
     <div class="cats" id="catsGrid"></div>
     <div id="ozaSection"></div>
     <div class="banner">
-      <b data-i18n="home.banner_t">Une seconde vie pour vos objets 🌿</b>
-      <span data-i18n="home.banner_s">Déposez votre première annonce en moins d'une minute.</span>
+      <b>Une seconde vie pour vos objets 🌿</b>
+      <span>Déposez votre première annonce en moins d'une minute.</span>
     </div>
-    <h3 class="section" data-i18n="home.near">Près de chez vous</h3>
+    <h3 class="section">Près de chez vous</h3>
     <div class="ad-list" id="homeList"></div>
   </div>
 
+   
   <!-- ANNONCES -->
   <div class="screen" id="s-annonces">
   <div class="search" style="margin-bottom:10px;">
     <span>🔍</span><input id="fltQ" data-i18n-ph="list.search_ph" placeholder="Rechercher une annonce…" enterkeyhint="search">
-    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doSearch()" data-i18n="home.search_btn">OK</button>
+    <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="doSearch()" data-i18n="home.search_btn">Rechercher</button>
     <button class="btn small" style="width:auto;padding:8px 12px;flex-shrink:0;" onclick="openFilters()">⚙️ <span data-i18n="list.filters">Filtres</span><span id="fltBadge"></span></button>
   </div>
   <div id="fltSummary" style="font-size:12.5px;color:var(--muted);margin:0 2px 10px;"></div>
@@ -312,14 +304,13 @@ nav button.active{color:var(--orange-dark);}
   <div class="ad-list" id="fullList"></div>
 </div>
 
-
   <!-- DÉPOSER -->
   <div class="screen" id="s-deposer">
     <div id="deposer-gate" style="display:none;">
-      <h3 class="section" data-i18n="post.title">Déposer une annonce</h3>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:18px;" data-i18n="post.need_login">Vous devez être connecté pour déposer une annonce.</p>
-      <button class="btn" onclick="go('profil')" data-i18n="auth.login">Se connecter</button>
-      <button class="btn ghost" style="margin-top:10px;" onclick="openRegister()" data-i18n="auth.create">Créer un compte</button>
+      <h3 class="section">Déposer une annonce</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:18px;">Vous devez être connecté pour déposer une annonce.</p>
+      <button class="btn" onclick="go('profil')">Se connecter</button>
+      <button class="btn ghost" style="margin-top:10px;" onclick="openRegister()">Créer un compte</button>
     </div>
     <div id="deposer-form"></div>
   </div>
@@ -338,8 +329,7 @@ nav button.active{color:var(--orange-dark);}
   <div class="detail-footer" id="detailFooter"></div>
 </div>
 
-<!-- VISIONNEUSE PHOTOS -->
-   
+  <!-- VISIONNEUSE PHOTOS -->
   <div id="lightbox">
     <div class="lb-count" id="lbCount"></div>
     <div class="lb-top-btns">
@@ -363,18 +353,15 @@ nav button.active{color:var(--orange-dark);}
   </div>
 
   <nav>
-    <button class="active" data-s="accueil" onclick="go('accueil')"><span class="ic">🏠</span><span data-i18n="nav.home">Accueil</span></button>
-    <button data-s="annonces" onclick="go('annonces')"><span class="ic">🔎</span><span data-i18n="nav.ads">Annonces</span></button>
-    <button data-s="deposer" onclick="go('deposer')"><span class="ic">➕</span><span data-i18n="nav.post">Déposer</span></button>
-    <button data-s="profil" onclick="go('profil')"><span class="ic">👤</span><span data-i18n="nav.profile">Profil</span></button>
+    <button class="active" data-s="accueil" onclick="go('accueil')"><span class="ic">🏠</span>Accueil</button>
+    <button data-s="annonces" onclick="go('annonces')"><span class="ic">🔎</span>Annonces</button>
+    <button data-s="deposer" onclick="go('deposer')"><span class="ic">➕</span>Déposer</button>
+    <button data-s="profil" onclick="go('profil')"><span class="ic">👤</span>Profil</button>
   </nav>
 </div>
 
-<script src="i18n.js"></script>
-<script src="i18n_extra.js"></script>
-<script src="i18n_forms.js"></script>
 <script>
-const API_BASE = 'https://www.ozannonces.ma';
+const API_BASE = 'https://www.ozannonces.fr';
 
 /* ===== Conformité Google Play : liens externes, signalement, blocage, suppression de compte ===== */
 // Les achats de boosts ne sont pas proposés dans l'app (règles de paiement de Google Play) : ils restent sur le site.
@@ -479,7 +466,6 @@ window.fetch = function(url, opts){
     const sid = localStorage.getItem('oz_sid');
     if(sid) opts = Object.assign({}, opts, { headers: Object.assign({}, opts.headers || {}, {'X-Session-Id': sid}) });
   }
-  if(typeof url === 'string' && url.indexOf(API_BASE) === 0) url += (url.indexOf('?') > -1 ? '&' : '?') + 'lang=' + LANG;
   return _origFetch(url, opts);
 };
 
@@ -495,62 +481,45 @@ const CAT_META = {
   dons:                {icon:'🎁', label:'Dons',                color:'#f59e0b'},
   animaux:             {icon:'🐾', label:'Animaux',             color:'#22c55e'},
 };
-const CAT_ALIAS = {vehicules:'auto_moto',vehicule:'auto_moto',voitures:'auto_moto',voiture:'auto_moto',automoto:'auto_moto',auto:'auto_moto',moto:'auto_moto',
-  emploi:'emploi_services',emploiservices:'emploi_services',emploi_et_services:'emploi_services',services:'emploi_services',
-  babysitting:'baby_sitting',babysit:'baby_sitting',baby_sit:'baby_sitting',
-  locations_et_vacances:'locations_vacances',location_vacances:'locations_vacances',locations:'locations_vacances',vacances:'locations_vacances',
-  don:'dons',donation:'dons',animal:'animaux',covoiturages:'covoiturage',immo:'immobilier'};
-function normSlug(s){ s = String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''); return CAT_ALIAS[s] || s; }
-function metaFor(slug){ const k = normSlug(slug); const m = CAT_META[k] || {icon:'📦', color:'#94a3b8'};
-  return Object.assign({}, m, { label: I18N.fr['cat.'+k] ? t('cat.'+k) : (slug || t('cat.others')) }); }
-function catName(slug, name){ const k = normSlug(slug); return I18N.fr['cat.'+k] ? t('cat.'+k) : (name || ''); }
-function catLabel(c){ return catName(c.slug, c.name); }
+function metaFor(slug){ return CAT_META[slug] || {icon:'📦', label: slug || 'Autres', color:'#94a3b8'}; }
 
 let categories = [];
 let catsExpanded = false;
 let currentCategoryId = null;
 
-
 /* ---------- OZAMarket : sous-catégories ---------- */
 const SUB_META = {
-  meubles:{icon:'🛋️'}, electronique:{icon:'📱'}, bricolage:{icon:'🛠️'}, electromenager:{icon:'🔌'},
-  vetements:{icon:'👕'}, jardin:{icon:'🌿'}, sante:{icon:'🩺'}, jeux:{icon:'🧸'}, autres:{icon:'➕'}
+  meubles:{icon:'🛋️',name:'Meubles'}, electronique:{icon:'📱',name:'Électronique & Multimédia'}, bricolage:{icon:'🛠️',name:'Bricolage'},
+  electromenager:{icon:'🔌',name:'Électroménager'}, vetements:{icon:'👕',name:'Vêtements'}, jardin:{icon:'🌿',name:'Jardin'},
+  sante:{icon:'🩺',name:'Santé & Paramédical'}, jeux:{icon:'🧸',name:'Jeux & Jouets'}, autres:{icon:'➕',name:'Autres'}
 };
-// Reconnaît la sous-catégorie à partir du slug/nom renvoyé par l'API (fr, en, es, ar)
+// Reconnaît la sous-catégorie à partir du nom renvoyé par la base
 const SUB_RULES = [
-  ['electromenager', /electromenag|appliance|electrodomestic|أجهزة منزلية|اجهزة منزلية/],
-  ['electronique',   /electronique|electronic|electronica|multimedia|multimédia|إلكترون|الكترون/],
-  ['meubles',        /meuble|furniture|mueble|أثاث|اثاث/],
-  ['bricolage',      /bricol|diy|tools|أشغال|اشغال/],
-  ['vetements',      /vetement|cloth|ropa|apparel|ملابس/],
-  ['jardin',         /jardin|garden|jardín|حديقة|بستن/],
-  ['sante',          /sante|health|salud|paramed|صح/],
-  ['jeux',           /jeux|jouet|toy|game|juego|juguete|ألعاب|العاب|لعب/],
-  ['autres',         /autre|other|otro|أخرى|اخرى/],
+  ['electromenager', /electromenag/], ['electronique', /electronique|multim/], ['meubles', /meuble/],
+  ['bricolage', /bricol/], ['vetements', /vetement/], ['jardin', /jardin/], ['sante', /sante|paramed/],
+  ['jeux', /jeux|jouet/], ['autres', /autre/]
 ];
 function subKey(n){
-  const raw = ((n && (n.slug||'')) + ' ' + (n && n.name || '')).toLowerCase();
-  const flat = raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  for(const [k,re] of SUB_RULES){ if(re.test(flat) || re.test(raw)) return k; }
+  const flat = ((n.slug||'') + ' ' + (n.name||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  for(const [k,re] of SUB_RULES){ if(re.test(flat)) return k; }
   return null;
 }
-function subName(n){ const k = subKey(n); return k ? t('sub.'+k) : (n.name || ''); }
+function subName(n){ return n.name || ''; }
 function subIcon(n){ const k = subKey(n); return k ? SUB_META[k].icon : '📦'; }
-function subNameByText(txt){ if(!txt) return txt; const k = subKey({name:txt}); return k ? t('sub.'+k) : txt; }
+function subDefaultName(k){ return SUB_META[k].name; }
+function ozaTitle(c){ return 'OZAMarket'; }
+function ozaSubtitle(){ return 'Achetez et vendez près de chez vous'; }
+function ozaSeeAll(){ return 'Voir tout'; }
 
-function subDefaultName(k){ return t('sub.'+k); }
-function ozaTitle(c){ return c ? catLabel(c) : t('cat.ozamarket'); }
-function ozaSubtitle(){ return t('oza.sub'); }
-function ozaSeeAll(){ return t('oza.see_all'); }
-function ozaCat(){ return categories.find(c => normSlug(c.slug) === 'ozamarket') || null; }
-let ozaSubs = { lang:null, id:null, nodes:[] };
+function ozaCat(){ return categories.find(c => c.slug === 'ozamarket') || null; }
+let ozaSubs = { id:null, lang:'fr', nodes:[] };
 async function loadOzaSubs(){
   const c = ozaCat(); if(!c) return [];
-  if(ozaSubs.id === c.id && ozaSubs.lang === LANG && ozaSubs.nodes.length) return ozaSubs.nodes;
+  if(ozaSubs.id === c.id && ozaSubs.nodes.length) return ozaSubs.nodes;
   try{
     const d = await apiFetch('/api_filters.php?category_id=' + c.id);
-    ozaSubs = { lang: LANG, id: c.id, nodes: (d && d.success && d.tree) ? d.tree : [] };
-  }catch(e){ ozaSubs = { lang: LANG, id: c.id, nodes: [] }; }
+    ozaSubs = { id: c.id, lang:'fr', nodes: (d && d.success && d.tree) ? d.tree : [] };
+  }catch(e){ ozaSubs = { id: c.id, lang:'fr', nodes: [] }; }
   return ozaSubs.nodes;
 }
 
@@ -576,19 +545,19 @@ function renderOza(){
     ).join('')}</div>
   </div>`;
   // Récupère les vraies sous-catégories en arrière-plan, puis réaffiche
-  if(c && (ozaSubs.id !== c.id || ozaSubs.lang !== LANG || !ozaSubs.nodes.length)){
+  if(c && (ozaSubs.id !== c.id || ozaSubs.lang !== 'fr' || !ozaSubs.nodes.length)){
     loadOzaSubs().then(n => { if(n.length) renderOza(); });
   }
 }
 
-// Puces de sous-catégories affichées dans l'écran Annonces quand OZAMarket est sélectionné
+// Puces de sous-catégories dans l'écran Annonces quand OZAMarket est sélectionné
 async function renderSubChips(){
   const el = document.getElementById('subChipsRow'); if(!el) return;
   const c = ozaCat();
   if(!c || currentCategoryId !== c.id){ el.innerHTML = ''; return; }
   const nodes = await loadOzaSubs();
   if(currentCategoryId !== c.id){ el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="subchip ${!searchFilters.subId?'on':''}" onclick="pickOzaSub(null)">${t('oza.all')}</div>` +
+  el.innerHTML = `<div class="subchip ${!searchFilters.subId?'on':''}" onclick="pickOzaSub(null)">Tout OZAMarket</div>` +
     nodes.map(n => `<div class="subchip ${searchFilters.subId===n.id?'on':''}" onclick="pickOzaSub(${n.id})">${subIcon(n)} ${escapeHtml(subName(n))}</div>`).join('');
 }
 
@@ -618,8 +587,8 @@ async function loadCategories(){
 
 function renderCats(){
   const el = document.getElementById('catsGrid');
-  if(!categories.length){ el.innerHTML = `<p style="color:#999;font-size:13px;grid-column:1/-1">${t('cat.loading')}</p>`; return; }
-  let list = categories.filter(c => normSlug(c.slug) !== 'ozamarket');
+  if(!categories.length){ el.innerHTML = '<p style="color:#999;font-size:13px;grid-column:1/-1">Chargement des catégories…</p>'; return; }
+  let list = categories.filter(c => c.slug !== 'ozamarket');
   renderOza();
   let items;
   if(!catsExpanded){
@@ -627,7 +596,7 @@ function renderCats(){
       const m = metaFor(c.slug);
       return `<div class="cat" onclick="filterByCategory(${c.id})"><div class="ico">${m.icon}</div><div class="lab">${m.label}</div></div>`;
     });
-    items.push(`<div class="cat" onclick="catsExpanded=true;renderCats();"><div class="ico">⋯</div><div class="lab">${t('cat.others')}</div></div>`);
+    items.push(`<div class="cat" onclick="catsExpanded=true;renderCats();"><div class="ico">⋯</div><div class="lab">Autres</div></div>`);
   } else {
     items = list.map(c=>{
       const m = metaFor(c.slug);
@@ -639,7 +608,7 @@ function renderCats(){
 
 function renderChips(){
   const el = document.getElementById('chipsRow');
-  const chips = [`<div class="chip ${currentCategoryId===null?'on':''}" onclick="filterByCategory(null)">${t('cat.all')}</div>`]
+  const chips = [`<div class="chip ${currentCategoryId===null?'on':''}" onclick="filterByCategory(null)">Tout</div>`]
     .concat(categories.map(c=>{
       const m = metaFor(c.slug);
       return `<div class="chip ${currentCategoryId===c.id?'on':''}" onclick="filterByCategory(${c.id})">${m.icon} ${m.label}</div>`;
@@ -666,7 +635,7 @@ const listState = {};
 
 async function loadListings(categoryId, targetId){
   const el = document.getElementById(targetId);
-  el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">'+t('list.loading')+'</p>';
+  el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Chargement des annonces…</p>';
   listState[targetId] = { categoryId, page: 1, total: 0, items: [] };
   try{
     const url = buildUrl(targetId, 1, categoryId);
@@ -681,7 +650,7 @@ async function loadListings(categoryId, targetId){
     renderList(targetId, st.items, st.total);
   }catch(e){
     console.warn('Annonces indisponibles', e);
-    el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">'+t('list.error')+'</p>';
+    el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Impossible de charger les annonces pour le moment.</p>';
   }
 }
 
@@ -689,7 +658,7 @@ async function loadMoreListings(targetId){
   const st = listState[targetId];
   if(!st) return;
   const btn = document.getElementById('more-' + targetId);
-  if(btn){ btn.disabled = true; btn.textContent = t('list.loading_short'); }
+  if(btn){ btn.disabled = true; btn.textContent = 'Chargement…'; }
   try{
     const url = buildUrl(targetId, st.page + 1, st.categoryId);
     const res = await fetch(url);
@@ -702,62 +671,45 @@ async function loadMoreListings(targetId){
     renderList(targetId, st.items, st.total);
   }catch(e){
     console.warn('Chargement de la suite impossible', e);
-    if(btn){ btn.disabled = false; btn.textContent = t('list.retry'); }
+    if(btn){ btn.disabled = false; btn.textContent = 'Réessayer'; }
   }
 }
-const NEW_DAYS = 3; // une annonce est "nouvelle" pendant 3 jours
-function isNew(a){
-  const raw = a.created_at;
-  if(!raw) return false;
-  const d = new Date(String(raw).replace(' ', 'T'));
-  return !isNaN(d) && (Date.now() - d.getTime()) < NEW_DAYS * 86400000;
-}
-function newBadge(a){
-  if(!isNew(a)) return '';
-  const lab = {fr:'NOUVEAU', en:'NEW', ar:'جديد', es:'NUEVO'}[LANG] || 'NEW';
-  return `<span class="new-badge">${lab}</span>`;
-}
 
-const FLAG_LABELS = {
-  boost:  {fr:'À LA UNE', en:'FEATURED', ar:'مميز',  es:'DESTACADO'},
-  urgent: {fr:'URGENT',   en:'URGENT',   ar:'عاجل',  es:'URGENTE'}
-};
 function flagsHtml(a){
-  const l = k => (FLAG_LABELS[k][LANG] || FLAG_LABELS[k].fr);
-  const out = (a.boosted ? `<span class="ad-flag boost">⭐ ${l('boost')}</span>` : '')
-            + (a.urgent  ? `<span class="ad-flag urgent">⚡ ${l('urgent')}</span>` : '');
+  const out = (a.boosted ? '<span class="ad-flag boost">⭐ À LA UNE</span>' : '')
+            + (a.urgent  ? '<span class="ad-flag urgent">⚡ URGENT</span>' : '');
   return out ? `<div class="ad-flags">${out}</div>` : '';
 }
 
 function renderList(targetId, list, total){
   const el = document.getElementById(targetId);
   if(!list.length){
-    el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">'+t('list.none')+'</p>';
+    el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;padding:20px">Aucune annonce pour l\'instant.</p>';
     return;
   }
   const cards = list.map((a,i)=>{
     const m = metaFor(a.category_slug);
-    const priceTxt = (a.price === null || a.price === 0) ? t('price.unset') : (Math.round(a.price) + ' ' + (a.currency||'DH'));
+    const priceTxt = (a.price === null || a.price === 0) ? 'Prix non précisé' : (Math.round(a.price) + ' ' + (a.currency||'€'));
     const thumbInner = a.image
       ? `<img src="${a.image}" alt="" onerror="this.outerHTML='<span>${m.icon}</span>'">`
       : `<span>${m.icon}</span>`;
     return `
-    <div class="ad-card" onclick="openDetail(${i})">
-      ${newBadge(a)}${flagsHtml(a)}
+        <div class="ad-card" onclick="openDetail(${i})">
+      ${flagsHtml(a)}
       <div class="ad-thumb${a.photo_highlight ? ' gold' : ''}" style="background:${m.color}">
         ${thumbInner}
       </div>
       <div class="ad-info">
         <div class="ad-title">${escapeHtml(a.title)}</div>
         <div class="ad-price">${priceTxt}</div>
-        <div class="ad-loc">📍 ${escapeHtml(a.city || t('loc.unset'))}</div>
+        <div class="ad-loc">📍 ${escapeHtml(a.city || 'Localisation non précisée')}</div>
       </div>
     </div>`;
   }).join('');
 
   const hasMore = typeof total === 'number' && list.length < total;
   const moreBtn = hasMore
-    ? `<button id="more-${targetId}" class="btn ghost" style="margin-top:14px;" onclick="loadMoreListings('${targetId}')">${t('list.more')}</button>`
+    ? `<button id="more-${targetId}" class="btn ghost" style="margin-top:14px;" onclick="loadMoreListings('${targetId}')">Voir plus d'annonces</button>`
     : '';
 
   el.innerHTML = cards + moreBtn;
@@ -797,6 +749,7 @@ function go(name){
   if(name==='deposer') updateDeposerGate();
 }
 
+/* ---------- VISIONNEUSE PHOTOS (zoom + défilement) ---------- */
 /* ---------- VISIONNEUSE PHOTOS (zoom + défilement + miniatures) ---------- */
 const lb = { idx:0, s:1, x:0, y:0, pinch:null, pan:null, lastTap:0, timer:null };
 
@@ -918,7 +871,7 @@ function closeLightbox(){
 /* ---------- FICHE DÉTAIL (api_details.php) ---------- */
 let currentDetail = null;
 let pendingDetailId = null;
-const fmtPrice = a => (a.price === null || a.price === 0) ? t('price.unset') : (Math.round(a.price) + ' ' + (a.currency || 'DH'));
+const fmtPrice = a => (a.price === null || a.price === 0) ? 'Prix non précisé' : (Math.round(a.price) + ' ' + (a.currency || '€'));
 const imgOrIcon = (src, icon) => src
   ? `<img src="${escapeHtml(src)}" alt="" onerror="this.outerHTML='<span>${icon}</span>'">` : `<span>${icon}</span>`;
 
@@ -930,7 +883,7 @@ async function openDetailById(id, preview){
   document.getElementById('detailScroll').innerHTML =
     `<div class="gallery">${preview ? `<div>${imgOrIcon(preview.image, m.icon)}</div>` : ''}</div>
      <div class="dt-body">${preview ? `<h2>${escapeHtml(preview.title)}</h2><div class="dt-price">${fmtPrice(preview)}</div>` : ''}
-     <p class="subpage-loading">${t('list.loading_short')}</p></div>`;
+     <p class="subpage-loading">Chargement…</p></div>`;
   document.getElementById('detailFooter').innerHTML = '';
   document.getElementById('detail').classList.add('open');
   document.getElementById('detailScroll').scrollTop = 0;
@@ -942,37 +895,36 @@ async function openDetailById(id, preview){
     renderDetail(data);
   }catch(e){
     document.querySelector('#detailScroll .dt-body').innerHTML =
-      `<p class="subpage-loading">${escapeHtml(e.message || t('net.error'))}</p>`;
+      `<p class="subpage-loading">${escapeHtml(e.message || 'Erreur réseau.')}</p>`;
   }
 }
 
 function renderDetail(d){
   const a = d.annonce, m = metaFor(a.category_slug);
-  
 const gallery = a.images.length
   ? a.images.map((im, i) => `<div onclick="openLightbox(${i})">${imgOrIcon(im.url, m.icon)}</div>`).join('')
   : `<div>${m.icon}</div>`;
-  const date = new Date((a.created_at || '').replace(' ', 'T')).toLocaleDateString(LANG_LOCALE[LANG]);
-  const tags = [catName(a.category_slug, a.category_name), subNameByText(a.subcategory_name), a.condition, a.property_type, a.transaction,
-    a.seller_type === 'professionnel' ? t('detail.pro') : (a.seller_type ? t('detail.private') : null)]
+  const date = new Date((a.created_at || '').replace(' ', 'T')).toLocaleDateString('fr-FR');
+  const tags = [a.category_name, a.subcategory_name, a.condition, a.property_type, a.transaction,
+    a.seller_type === 'professionnel' ? 'Professionnel' : (a.seller_type ? 'Particulier' : null)]
     .filter(Boolean).map(t => `<span class="dt-tag">${escapeHtml(t)}</span>`).join('');
   const attrs = a.attributes.length
-    ? `<div class="dt-h" data-i18n="detail.specs">Caractéristiques</div>` +
+    ? `<div class="dt-h">Caractéristiques</div>` +
       a.attributes.map(x => `<div class="dt-attr"><span>${escapeHtml(x.name)}</span><span>${escapeHtml(x.value)}</span></div>`).join('') : '';
 
   // Vendeur : le téléphone n'est présent dans la réponse que si connecté
-  let seller = `<div class="dt-h" data-i18n="detail.seller">Vendeur</div><div class="dt-seller"><b>${escapeHtml(d.seller.name || 'Vendeur')}</b>
+  let seller = `<div class="dt-h">Vendeur</div><div class="dt-seller"><b>${escapeHtml(d.seller.name || 'Vendeur')}</b>
     <div style="color:var(--muted);font-size:12.5px;">📍 ${escapeHtml(d.seller.city || a.city || '')}</div>`;
   if(d.contact){
     seller += d.contact.telephone
       ? `<a class="dt-phone" href="tel:${escapeHtml(d.contact.telephone)}">📞 ${escapeHtml(d.contact.telephone)}</a>`
-      : `<div style="color:var(--muted);font-size:13px;margin-top:8px;">${t('detail.no_phone')}</div>`;
+      : `<div style="color:var(--muted);font-size:13px;margin-top:8px;">Téléphone non renseigné</div>`;
   } else {
-    seller += `<div class="dt-gate" style="margin-top:10px;">${t('detail.gate')}</div>`;
+    seller += `<div class="dt-gate" style="margin-top:10px;">🔒 Connectez-vous pour voir le numéro et contacter le vendeur.</div>`;
   }
   seller += `</div>`;
 
-  const sim = d.similar.length ? `<div class="dt-h" data-i18n="detail.similar">Annonces similaires</div><div class="dt-sim">` +
+  const sim = d.similar.length ? `<div class="dt-h">Annonces similaires</div><div class="dt-sim">` +
     d.similar.map(s => `<div class="s" onclick="openDetailById(${s.id})">
       <div class="im">${imgOrIcon(s.image, m.icon)}</div>
       <div class="tx">${escapeHtml(s.title)}<div style="color:var(--orange-dark);font-weight:800;">${fmtPrice(s)}</div></div></div>`).join('') + `</div>` : '';
@@ -982,22 +934,22 @@ const gallery = a.images.length
     <div class="dt-body">
       <h2>${escapeHtml(a.title)}</h2>
       <div class="dt-price">${fmtPrice(a)}</div>
-      <div class="dt-meta">📍 ${escapeHtml(a.city || t('loc.unset'))} · ${date} · 👁 ${a.views} ${t('detail.views')} · ${t('detail.ref')} #${a.id}</div>
+      <div class="dt-meta">📍 ${escapeHtml(a.city || 'Localisation non précisée')} · ${date} · 👁 ${a.views} vues · Réf. #${a.id}</div>
       <div class="dt-tags">${tags}</div>
-      <div class="dt-h" data-i18n="detail.desc">Description</div>
-      <div class="dt-desc">${escapeHtml(a.description || t('detail.no_desc'))}</div>
+      <div class="dt-h">Description</div>
+      <div class="dt-desc">${escapeHtml(a.description || 'Aucune description disponible')}</div>
       ${attrs}${seller}${sim}
       ${d.is_owner ? '' : `<button class="btn ghost small" style="margin-top:16px;" onclick="openReport('annonce',${a.id})">${ozT('report_btn')}</button>`}
     </div>`;
 
   const f = document.getElementById('detailFooter');
   if(d.is_owner){
-    f.innerHTML = `<button class="btn ghost" onclick="closeDetail();openAdEdit(${a.id})">${t('detail.edit')}</button>`;
+    f.innerHTML = `<button class="btn ghost" onclick="closeDetail();openAdEdit(${a.id})">Modifier mon annonce</button>`;
   } else if(d.logged_in && d.contact){
-    f.innerHTML = `<button class="btn" onclick="contactSeller()">${t('detail.send_msg')}</button>`;
+    f.innerHTML = `<button class="btn" onclick="contactSeller()">💬 Envoyer un message</button>`;
   } else {
-    f.innerHTML = `<button class="btn" onclick="pendingDetailId=${a.id};closeDetail();go('profil')">${t('detail.login_contact')}</button>
-  <button class="btn ghost small" style="margin-top:8px;" onclick="openRegister()" data-i18n="auth.create">Créer un compte</button>`;
+    f.innerHTML = `<button class="btn" onclick="pendingDetailId=${a.id};closeDetail();go('profil')">Se connecter pour contacter</button>
+  <button class="btn ghost small" style="margin-top:8px;" onclick="openRegister()">Créer un compte</button>`;
   }
 }
 
@@ -1008,7 +960,6 @@ function contactSeller(){
   if(!d || !d.logged_in || !d.contact) return;
   openChat(d.annonce.id, d.contact.owner_id, /*standalone=*/true);
 }
-
 /* ================================================================
    SOUS-PAGES NATIVES : Profil / Mes annonces / Messagerie / Espace pro
    ================================================================ */
@@ -1016,7 +967,7 @@ let subpageMode = null; // 'profile' | 'ads-list' | 'ads-edit' | 'msg-list' | 'm
 
 function openSubpage(title, mode){
   document.getElementById('subpageTitle').textContent = title;
-  document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('list.loading_short')+'</p>';
+  document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Chargement…</p>';
   subpageMode = mode;
   document.getElementById('subpage').classList.add('open');
 }
@@ -1043,24 +994,24 @@ async function apiFetch(path, opts){
 
 /* ---------- MON PROFIL ---------- */
 async function openProfileEdit(){
-  openSubpage(t('profile.mine'), 'profile');
+  openSubpage('Mon Profil', 'profile');
   try{
     const data = await apiFetch('/api_profile.php');
     if(!data.success || !data.logged_in){
-      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('prof.load_fail')+'</p>';
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Impossible de charger le profil.</p>';
       return;
     }
     const u = data.user;
     document.getElementById('subpageBody').innerHTML = `
-      <div class="field"><label>${t('prof.name')}</label><input value="${escapeHtml(u.nom)}" disabled></div>
-      <div class="field"><label>${t('auth.email')}</label><input id="pEmail" type="email" value="${escapeHtml(u.email)}"></div>
-      <div class="field"><label>${t('common.phone')}</label><input id="pTel" type="tel" value="${escapeHtml(u.telephone)}"></div>
-      <div class="field"><label>${t('prof.newpass')}</label><input id="pPass" type="password" placeholder="${t('prof.newpass_ph')}"></div>
+      <div class="field"><label>Nom</label><input value="${escapeHtml(u.nom)}" disabled></div>
+      <div class="field"><label>Email</label><input id="pEmail" type="email" value="${escapeHtml(u.email)}"></div>
+      <div class="field"><label>Téléphone</label><input id="pTel" type="tel" value="${escapeHtml(u.telephone)}"></div>
+      <div class="field"><label>Nouveau mot de passe</label><input id="pPass" type="password" placeholder="Laisser vide pour ne pas changer"></div>
       <div id="pMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
-      <button class="btn" onclick="submitProfileUpdate()">${t('common.save')}</button>
+      <button class="btn" onclick="submitProfileUpdate()">Enregistrer</button>
     `;
   }catch(e){
-    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
   }
 }
 async function submitProfileUpdate(){
@@ -1071,39 +1022,38 @@ async function submitProfileUpdate(){
   msgEl.textContent = '';
   try{
     const data = await apiFetch('/api_profile_update.php', {method:'POST', body: JSON.stringify({email, telephone, password})});
-    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = t('prof.updated'); }
-    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || t('common.err'); }
-  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = t('net.error'); }
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = 'Profil mis à jour.'; }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || 'Erreur.'; }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = 'Erreur réseau.'; }
 }
 
 /* ---------- MES ANNONCES ---------- */
 let myAdsCache = [];
 async function openMesAnnonces(){
-  openSubpage(t('profile.ads'), 'ads-list');
+  openSubpage('Mes annonces', 'ads-list');
   try{
     const data = await apiFetch('/api_my_ads.php');
-    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('common.load_err')+'</p>'; return; }
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur de chargement.</p>'; return; }
     myAdsCache = data.ads;
     if(!myAdsCache.length){
-      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('ads.none')+'</p>';
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Vous n\'avez pas encore d\'annonce.</p>';
       return;
     }
     document.getElementById('subpageBody').innerHTML = myAdsCache.map((a,i)=>{
       const m = metaFor(a.category_slug);
-      const priceTxt = a.price ? Math.round(a.price)+' '+(a.currency||'DH') : t('price.unset');
+      const priceTxt = a.price ? Math.round(a.price)+' '+(a.currency||'€') : 'Prix non précisé';
       const thumb = a.image ? `<img src="${a.image}" onerror="this.outerHTML='<span>${m.icon}</span>'">` : `<span>${m.icon}</span>`;
       return `<div class="ad-card" onclick="openAdEdit(${a.id})">
-      ${newBadge(a)}
         <div class="ad-thumb" style="background:${m.color}">${thumb}</div>
         <div class="ad-info">
           <div class="ad-title">${escapeHtml(a.title)}</div>
           <div class="ad-price">${priceTxt}</div>
-          <div class="ad-loc">${escapeHtml(catName(a.category_slug, a.category_name) || t('ads.uncat'))}</div>
+          <div class="ad-loc">${escapeHtml(a.category_name || 'Non catégorisé')}</div>
         </div>
       </div>`;
     }).join('');
   }catch(e){
-    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
   }
 }
 
@@ -1111,28 +1061,28 @@ let currentAdImages = [];
 let currentAdImagesToDelete = [];
 
 async function openAdEdit(id){
-  openSubpage(t('ads.edit_title'), 'ads-edit');
+  openSubpage('Modifier l\'annonce', 'ads-edit');
   try{
     const data = await apiFetch('/api_ad_detail.php?id=' + id);
-    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+(data.error||t('common.err'))+'</p>'; return; }
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+(data.error||'Erreur')+'</p>'; return; }
     const a = data.annonce;
     currentAdImages = a.images || [];
     currentAdImagesToDelete = [];
     document.getElementById('subpageBody').innerHTML = `
       <div id="adImgRow" class="img-thumb-row"></div>
-      <div class="field"><label>${t('ads.f_title')}</label><input id="adTitle" value="${escapeHtml(a.title)}"></div>
-      <div class="field"><label>${t('detail.desc')}</label><textarea id="adDesc" rows="3">${escapeHtml(a.description)}</textarea></div>
-      <div class="field"><label>${t('post.f_price')}</label><input id="adPrice" type="number" value="${escapeHtml(a.price)}"></div>
-      <div class="field"><label>${t('common.phone')}</label><input id="adTel" value="${escapeHtml(a.telephone)}"></div>
-      <div class="field"><label data-i18n="filters.city">Ville</label><input id="adCity" value="${escapeHtml(a.city)}"></div>
+      <div class="field"><label>Titre</label><input id="adTitle" value="${escapeHtml(a.title)}"></div>
+      <div class="field"><label>Description</label><textarea id="adDesc" rows="3">${escapeHtml(a.description)}</textarea></div>
+      <div class="field"><label>Prix (€)</label><input id="adPrice" type="number" value="${escapeHtml(a.price)}"></div>
+      <div class="field"><label>Téléphone</label><input id="adTel" value="${escapeHtml(a.telephone)}"></div>
+      <div class="field"><label>Ville</label><input id="adCity" value="${escapeHtml(a.city)}"></div>
       <div id="adMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
-      <button class="btn" onclick="submitAdUpdate(${a.id})">${t('common.save')}</button>
-      <button class="btn danger" style="margin-top:10px;" onclick="confirmDeleteAd(${a.id})">${t('common.delete')}</button>
-      ${OZ_BOOST_IN_APP ? `<button class="btn ghost" style="margin-top:10px;" onclick="openBoostExternal(${a.id})">${t('ads.boost')}</button>` : ''}
+      <button class="btn" onclick="submitAdUpdate(${a.id})">Enregistrer</button>
+      <button class="btn danger" style="margin-top:10px;" onclick="confirmDeleteAd(${a.id})">Supprimer l'annonce</button>
+      ${OZ_BOOST_IN_APP ? `<button class="btn ghost" style="margin-top:10px;" onclick="openBoostExternal(${a.id})">🚀 Booster cette annonce</button>` : ''}
     `;
     renderAdImgRow();
   }catch(e){
-    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
   }
 }
 function renderAdImgRow(){
@@ -1163,59 +1113,35 @@ async function submitAdUpdate(id){
   };
   try{
     const data = await apiFetch('/api_ad_update.php', {method:'POST', body: JSON.stringify(payload)});
-    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = t('ads.updated'); }
-    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || t('common.err'); }
-  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = t('net.error'); }
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = 'Annonce mise à jour.'; }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || 'Erreur.'; }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = 'Erreur réseau.'; }
 }
 function confirmDeleteAd(id){
-  if(!confirm(t('ads.confirm_del'))) return;
+  if(!confirm('Supprimer définitivement cette annonce ?')) return;
   deleteAd(id);
 }
 async function deleteAd(id){
   try{
     const data = await apiFetch('/api_ad_delete.php', {method:'POST', body: JSON.stringify({id})});
-    if(data.success){ openMesAnnonces(); } else { alert(data.error || t('ads.del_err')); }
-  }catch(e){ alert(t('net.error')); }
+    if(data.success){ openMesAnnonces(); } else { alert(data.error || 'Erreur lors de la suppression.'); }
+  }catch(e){ alert('Erreur réseau.'); }
 }
 /* ---------- BOOST / PAIEMENT (mêmes options et mêmes prix que le desktop) ---------- */
-// Les prix affichés ici sont indicatifs : le serveur (payment_gateway.php, paiement_config.php)
-// recalcule toujours le total. Gardez ces valeurs alignées sur paiement_config.php.
+// Les prix affichés ici sont indicatifs : le serveur (payment_gateway.php) recalcule toujours le total.
 const IS_MA = API_BASE.endsWith('.ma');
 const BOOST_CUR = IS_MA ? 'DH' : '€';
 const BOOST_DUR = IS_MA ? {'3days':20,'7days':60,'30days':100,'8weeks':150} : {'3days':2,'7days':6,'30days':10,'8weeks':15};
+const BOOST_DUR_LABEL = {'3days':'3 jours','7days':'7 jours','30days':'30 jours','8weeks':'8 semaines'};
 const BOOST_URGENT = IS_MA ? 30 : 10;
 const BOOST_PHOTO  = IS_MA ? 25 : 10;
-const BOOST_T = {
-  fr:{title:'Booster mon annonce',auto:'Remontée automatique',autoSub:'Votre annonce remonte en tête de liste',from:'dès',duration:'Durée',
-      urgent:'Badge Urgent',urgentSub:"Badge visible sur l'annonce",photo:'Mise en avant photo',photoSub:'Cadre doré autour de la photo',total:'Total',
-      pay:'Payer (PayPal / Carte / Virement)',note:"Le paiement s'ouvre dans votre navigateur, sur la page sécurisée du site.",
-      choose:'Choisissez au moins une option.',neterr:'Erreur réseau',err:'Erreur.',
-      d:{'3days':'3 jours','7days':'7 jours','30days':'30 jours','8weeks':'8 semaines'}},
-  en:{title:'Boost my ad',auto:'Automatic bump',autoSub:'Your ad moves back to the top of the list',from:'from',duration:'Duration',
-      urgent:'Urgent badge',urgentSub:'Badge shown on your ad',photo:'Photo highlight',photoSub:'Golden frame around the photo',total:'Total',
-      pay:'Pay (PayPal / Card / Bank transfer)',note:"Payment opens in your browser, on the site's secure page.",
-      choose:'Select at least one option.',neterr:'Network error',err:'Error.',
-      d:{'3days':'3 days','7days':'7 days','30days':'30 days','8weeks':'8 weeks'}},
-  ar:{title:'تعزيز إعلاني',auto:'الرفع التلقائي',autoSub:'يعود إعلانك إلى أعلى القائمة',from:'ابتداءً من',duration:'المدة',
-      urgent:'شارة عاجل',urgentSub:'شارة ظاهرة على الإعلان',photo:'إبراز الصورة',photoSub:'إطار ذهبي حول الصورة',total:'المجموع',
-      pay:'الدفع (PayPal / بطاقة / تحويل بنكي)',note:'يُفتح الدفع في متصفحك على صفحة الموقع الآمنة.',
-      choose:'اختر خيارًا واحدًا على الأقل.',neterr:'خطأ في الشبكة',err:'خطأ.',
-      d:{'3days':'3 أيام','7days':'7 أيام','30days':'30 يومًا','8weeks':'8 أسابيع'}},
-  es:{title:'Destacar mi anuncio',auto:'Subida automática',autoSub:'Tu anuncio vuelve a la parte superior de la lista',from:'desde',duration:'Duración',
-      urgent:'Insignia Urgente',urgentSub:'Insignia visible en el anuncio',photo:'Foto destacada',photoSub:'Marco dorado alrededor de la foto',total:'Total',
-      pay:'Pagar (PayPal / Tarjeta / Transferencia)',note:'El pago se abre en tu navegador, en la página segura del sitio.',
-      choose:'Elige al menos una opción.',neterr:'Error de red',err:'Error.',
-      d:{'3days':'3 días','7days':'7 días','30days':'30 días','8weeks':'8 semanas'}}
-};
-function bt(){ return BOOST_T[(typeof LANG !== 'undefined' && BOOST_T[LANG]) ? LANG : 'fr']; }
 let boostPending = false;
 
 function openBoostExternal(id){
   if(!OZ_BOOST_IN_APP) return;
-  const T = bt();
-  openSubpage(T.title, 'ads-edit');
+  openSubpage('Booster mon annonce', 'ads-edit');
   const durOpts = Object.keys(BOOST_DUR).map(k =>
-    `<option value="${k}">${T.d[k]} — ${BOOST_DUR[k]} ${BOOST_CUR}</option>`).join('');
+    `<option value="${k}">${BOOST_DUR_LABEL[k]} — ${BOOST_DUR[k]} ${BOOST_CUR}</option>`).join('');
   const row = (inputId, title, sub, price) => `
     <label style="display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;">
       <input type="checkbox" id="${inputId}" onchange="updateBoostTotal()" style="width:20px;height:20px;margin-top:2px;accent-color:var(--orange);">
@@ -1223,16 +1149,16 @@ function openBoostExternal(id){
       <b style="color:var(--orange-dark);white-space:nowrap;">${price}</b>
     </label>`;
   document.getElementById('subpageBody').innerHTML = `
-    ${row('bAuto', '🔝 ' + T.auto, T.autoSub, T.from + ' ' + Math.min(...Object.values(BOOST_DUR)) + ' ' + BOOST_CUR)}
-    <div class="field" id="bDurWrap" style="display:none;"><label>${T.duration}</label><select id="bDur" onchange="updateBoostTotal()">${durOpts}</select></div>
-    ${row('bUrgent', '⚡ ' + T.urgent, T.urgentSub, BOOST_URGENT + ' ' + BOOST_CUR)}
-    ${row('bPhoto', '🖼️ ' + T.photo, T.photoSub, BOOST_PHOTO + ' ' + BOOST_CUR)}
+    ${row('bAuto', '🔝 Remontée automatique', 'Votre annonce remonte en tête de liste', 'dès ' + Math.min(...Object.values(BOOST_DUR)) + ' ' + BOOST_CUR)}
+    <div class="field" id="bDurWrap" style="display:none;"><label>Durée</label><select id="bDur" onchange="updateBoostTotal()">${durOpts}</select></div>
+    ${row('bUrgent', '⚡ Badge Urgent', 'Badge visible sur l\'annonce', BOOST_URGENT + ' ' + BOOST_CUR)}
+    ${row('bPhoto', '🖼️ Mise en avant photo', 'Cadre doré autour de la photo', BOOST_PHOTO + ' ' + BOOST_CUR)}
     <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 2px;">
-      <span style="font-weight:700;">${T.total}</span><span id="bTotal" style="font-size:20px;font-weight:800;color:var(--orange-dark);">0 ${BOOST_CUR}</span>
+      <span style="font-weight:700;">Total</span><span id="bTotal" style="font-size:20px;font-weight:800;color:var(--orange-dark);">0 ${BOOST_CUR}</span>
     </div>
     <div id="bMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
-    <button class="btn" id="bPay" onclick="payBoost(${id})">${T.pay}</button>
-    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;">${T.note}</p>`;
+    <button class="btn" id="bPay" onclick="payBoost(${id})">Payer (PayPal / Carte / Virement)</button>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;">Le paiement s'ouvre dans votre navigateur, sur la page sécurisée du site.</p>`;
   updateBoostTotal();
 }
 function updateBoostTotal(){
@@ -1245,13 +1171,12 @@ function updateBoostTotal(){
   document.getElementById('bTotal').textContent = total + ' ' + BOOST_CUR;
 }
 async function payBoost(id){
-  const T = bt();
   const msg = document.getElementById('bMsg'), btn = document.getElementById('bPay');
   msg.textContent = '';
   const auto = document.getElementById('bAuto').checked;
   const urgent = document.getElementById('bUrgent').checked;
   const photo = document.getElementById('bPhoto').checked;
-  if(!auto && !urgent && !photo){ msg.textContent = T.choose; return; }
+  if(!auto && !urgent && !photo){ msg.textContent = 'Choisissez au moins une option.'; return; }
   btn.disabled = true;
   try{
     // Le serveur renvoie une URL à usage unique qui ouvre la session dans le navigateur
@@ -1259,9 +1184,13 @@ async function payBoost(id){
       annonce_id: id, auto_boost: auto, boost_duration: document.getElementById('bDur').value,
       urgent_badge: urgent, photo_highlight: photo
     })});
-    if(data.success && data.url){ boostPending = true; openExternal(data.url); }
-    else { msg.textContent = data.error || T.err; }
-  }catch(e){ msg.textContent = T.neterr + ' (' + (e && e.message ? e.message : e) + ')'; }
+    if(data.success && data.url){
+      boostPending = true;
+      const B = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+      openExternal(data.url);
+    }
+    else { msg.textContent = data.error || 'Erreur.'; }
+  }catch(e){ msg.textContent = 'Erreur réseau (' + (e && e.message ? e.message : e) + ')'; }
   btn.disabled = false;
 }
 // Retour dans l'app après le paiement : on recharge la liste pour afficher le nouveau statut
@@ -1273,18 +1202,18 @@ document.addEventListener('visibilitychange', function(){
 let currentChat = { annonceId:null, otherUserId:null, conversationId:null };
 
 async function openMessagerie(){
-  openSubpage(t('profile.msgs'), 'msg-list');
+  openSubpage('Ma Messagerie', 'msg-list');
   try{
     const data = await apiFetch('/api_conversations.php');
-    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('common.load_err')+'</p>'; return; }
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur de chargement.</p>'; return; }
     if(!data.conversations.length){
-      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('msg.none')+'</p>';
+      document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Aucune conversation pour le moment.</p>';
       return;
     }
     document.getElementById('subpageBody').innerHTML = data.conversations.map(c => {
       const thumb = c.image ? `<img src="${c.image}">` : '💬';
       const badge = c.unread_count > 0 ? `<span class="conv-badge">${c.unread_count}</span>` : '';
-      const date = new Date(c.updated_at).toLocaleDateString(LANG_LOCALE[LANG], {day:'2-digit', month:'2-digit'});
+      const date = new Date(c.updated_at).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
       return `<div class="conv-row" onclick="openChat(${c.annonce_id}, ${c.other_user_id})">
         <div class="conv-thumb">${thumb}</div>
         <div class="conv-info">
@@ -1294,18 +1223,18 @@ async function openMessagerie(){
       </div>`;
     }).join('');
   }catch(e){
-    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
   }
 }
 
 async function openChat(annonceId, otherUserId, standalone){
-  openSubpage(t('msg.chat'), standalone ? 'msg-chat-standalone' : 'msg-chat');
+  openSubpage('Conversation', standalone ? 'msg-chat-standalone' : 'msg-chat');
   currentChat = { annonceId, otherUserId, conversationId:null };
   try{
     const url = '/api_conversation_messages.php?annonce_id=' + annonceId + (otherUserId ? '&to=' + otherUserId : '');
     const data = await apiFetch(url);
-    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+(data.error||t('common.err'))+'</p>'; return; }
-    document.getElementById('subpageTitle').textContent = data.annonce_title || t('msg.chat');
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+(data.error||'Erreur')+'</p>'; return; }
+    document.getElementById('subpageTitle').textContent = data.annonce_title || 'Conversation';
     currentChat.conversationId = data.conversation_id;
     currentChat.otherUserId = data.other_user_id;
 
@@ -1317,15 +1246,15 @@ async function openChat(annonceId, otherUserId, standalone){
       for(let i=1;i<=5;i++) stars += `<span onclick="rateOwner(${ou.id},${i})" style="cursor:pointer">${i<=rounded?'★':'☆'}</span>`;
       ownerHtml = `<div id="chatOwner">
         <b>${escapeHtml(ou.nom)} ${escapeHtml(ou.prenom)}</b><br>
-        📍 ${escapeHtml(ou.city||t('msg.city_unset'))} · ${t('msg.since',{d:ou.membre_depuis})}<br>
-        ${t('msg.active_ads',{n:ou.total_annonces})}
+        📍 ${escapeHtml(ou.city||'Ville non renseignée')} · Membre depuis ${ou.membre_depuis}<br>
+        ${ou.total_annonces} annonce(s) active(s)
         <div class="stars" id="starsRow">${stars}</div>
-        <span style="font-size:12px;color:var(--muted);">${ou.moyenne_note ? t('msg.rating',{avg:ou.moyenne_note,n:ou.nb_notes}) : t('msg.not_rated')}</span>
+        <span style="font-size:12px;color:var(--muted);">${ou.moyenne_note ? ou.moyenne_note+'/5 ('+ou.nb_notes+' avis)' : 'Pas encore noté'}</span>
       </div>`;
     }
     const msgsHtml = data.messages.map(m => `
-      <div class="msg ${m.type}">${escapeHtml(m.text)}<span class="mt">${new Date(m.time).toLocaleString(LANG_LOCALE[LANG],{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
-    `).join('') || '<p class="subpage-loading">'+t('msg.empty')+'</p>';
+      <div class="msg ${m.type}">${escapeHtml(m.text)}<span class="mt">${new Date(m.time).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
+    `).join('') || '<p class="subpage-loading">Pas encore de messages.</p>';
 
     const chatActions = data.other_user_id ? `<div style="display:flex;gap:8px;padding:6px 0 10px;"><button class="btn ghost small" onclick="openReport('user',${Number(data.other_user_id)})">${ozT('report_user')}</button><button class="btn ghost small" onclick="blockUser(${Number(data.other_user_id)})">${ozT('block_user')}</button></div>` : '';
     document.getElementById('subpageBody').innerHTML = `
@@ -1333,7 +1262,7 @@ async function openChat(annonceId, otherUserId, standalone){
         ${ownerHtml}${chatActions}
         <div id="chatMessages">${msgsHtml}</div>
         <form id="chatForm" onsubmit="return false;">
-          <textarea id="chatInput" placeholder="${t('msg.ph')}" ${!data.other_user_id ? 'disabled' : ''}></textarea>
+          <textarea id="chatInput" placeholder="Écrivez votre message…" ${!data.other_user_id ? 'disabled' : ''}></textarea>
           <button onclick="submitChatMessage()" ${!data.other_user_id ? 'disabled' : ''}>➤</button>
         </form>
       </div>
@@ -1341,7 +1270,7 @@ async function openChat(annonceId, otherUserId, standalone){
     const msgsEl = document.getElementById('chatMessages');
     if(msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
   }catch(e){
-    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
   }
 }
 function escapeHtml(s){
@@ -1363,63 +1292,63 @@ async function submitChatMessage(){
       currentChat.conversationId = data.conversation_id;
       openChat(currentChat.annonceId, currentChat.otherUserId);
     } else {
-      alert(data.error || t('msg.send_err'));
+      alert(data.error || "Erreur d'envoi.");
     }
-  }catch(e){ alert(t('net.error')); }
+  }catch(e){ alert('Erreur réseau.'); }
 }
 async function rateOwner(userId, note){
   try{
     const data = await apiFetch('/api_rate_user.php', {method:'POST', body: JSON.stringify({user_id:userId, note})});
     if(data.success){
       openChat(currentChat.annonceId, currentChat.otherUserId);
-    } else { alert(data.error || t('common.err')); }
-  }catch(e){ alert(t('net.error')); }
+    } else { alert(data.error || 'Erreur.'); }
+  }catch(e){ alert('Erreur réseau.'); }
 }
 
 /* ---------- MON ESPACE PRO ---------- */
 async function openEspacePro(){
-  openSubpage(t('profile.pro'), 'pro');
+  openSubpage('Mon espace pro', 'pro');
   try{
     const data = await apiFetch('/api_espace_pro.php');
-    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('common.load_err')+'</p>'; return; }
+    if(!data.success){ document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur de chargement.</p>'; return; }
     if(!data.has_vitrine){
       document.getElementById('subpageBody').innerHTML = `
-        <p class="subpage-loading">${t('pro.none')}</p>
-        <button class="btn" onclick="openProDemande()">${t('pro.create')}</button>`;
+        <p class="subpage-loading">Vous n'avez pas encore de vitrine professionnelle.</p>
+        <button class="btn" onclick="openProDemande()">Créer ma vitrine</button>`;
       return;
     }
     const v = data.vitrine;
     const jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
     document.getElementById('subpageBody').innerHTML = `
       <div class="menu-row" style="cursor:default;">
-        <span class="l">📍 ${t('pro.status')}</span><span>${tx('pst.'+v.statut, v.statut_label)}</span>
+        <span class="l">📍 Statut</span><span>${v.statut_label}</span>
       </div>
       <div class="menu-row" style="cursor:default;">
-        <span class="l">💳 ${t('pro.plan')}</span><span>${tx('plan.'+v.plan, v.plan_label)}</span>
+        <span class="l">💳 Formule</span><span>${v.plan_label}</span>
       </div>
       <div class="menu-row" style="cursor:default;">
-        <span class="l">📋 ${t('pro.ads')}</span><span>${v.nb_annonces} / ${v.quota_annonces}</span>
+        <span class="l">📋 Annonces</span><span>${v.nb_annonces} / ${v.quota_annonces}</span>
       </div>
-      <div class="field"><label>${t('pro.f_name')}</label><input id="proNom" value="${escapeHtml(v.nom)}"></div>
-      <div class="field"><label>${t('pro.f_sector')}</label><input id="proSecteur" value="${escapeHtml(v.secteur)}"></div>
-      <div class="field"><label>${t('detail.desc')}</label><textarea id="proDesc" rows="3">${escapeHtml(v.description)}</textarea></div>
-      <div class="field"><label data-i18n="filters.city">Ville</label><input id="proVille" value="${escapeHtml(v.ville)}"></div>
-      <div class="field"><label>${t('pro.f_zip')}</label><input id="proCP" value="${escapeHtml(v.code_postal)}"></div>
-      <div class="field"><label>${t('pro.f_addr')}</label><input id="proAdresse" value="${escapeHtml(v.adresse)}"></div>
-      <div class="field"><label>${t('common.phone')}</label><input id="proTel" value="${escapeHtml(v.telephone)}"></div>
-      <div class="field"><label>${t('pro.f_email')}</label><input id="proEmail" value="${escapeHtml(v.email_public)}"></div>
-      <div class="field"><label>${t('pro.f_web')}</label><input id="proSite" value="${escapeHtml(v.site_web)}"></div>
+      <div class="field"><label>Nom de l'entreprise</label><input id="proNom" value="${escapeHtml(v.nom)}"></div>
+      <div class="field"><label>Secteur</label><input id="proSecteur" value="${escapeHtml(v.secteur)}"></div>
+      <div class="field"><label>Description</label><textarea id="proDesc" rows="3">${escapeHtml(v.description)}</textarea></div>
+      <div class="field"><label>Ville</label><input id="proVille" value="${escapeHtml(v.ville)}"></div>
+      <div class="field"><label>Code postal</label><input id="proCP" value="${escapeHtml(v.code_postal)}"></div>
+      <div class="field"><label>Adresse</label><input id="proAdresse" value="${escapeHtml(v.adresse)}"></div>
+      <div class="field"><label>Téléphone</label><input id="proTel" value="${escapeHtml(v.telephone)}"></div>
+      <div class="field"><label>E-mail public</label><input id="proEmail" value="${escapeHtml(v.email_public)}"></div>
+      <div class="field"><label>Site web</label><input id="proSite" value="${escapeHtml(v.site_web)}"></div>
       <div class="field"><label>Facebook</label><input id="proFb" value="${escapeHtml(v.facebook)}"></div>
       <div class="field"><label>Instagram</label><input id="proIg" value="${escapeHtml(v.instagram)}"></div>
       <div class="field"><label>LinkedIn</label><input id="proLi" value="${escapeHtml(v.linkedin)}"></div>
-      <h3 class="section">${t('pro.hours')}</h3>
-      ${jours.map(j=>`<div class="field"><label>${t('day.'+j)}</label><input id="proH_${j}" value="${escapeHtml((v.horaires && v.horaires[j]) || '')}" placeholder="${t('pro.hours_ph')}"></div>`).join('')}
+      <h3 class="section">Horaires</h3>
+      ${jours.map(j=>`<div class="field"><label style="text-transform:capitalize">${j}</label><input id="proH_${j}" value="${escapeHtml((v.horaires && v.horaires[j]) || '')}" placeholder="Ex : 9h00 – 18h00"></div>`).join('')}
       <div id="proMsg" style="color:#dc2626;font-size:13px;margin:6px 0;"></div>
-      <button class="btn" onclick="submitEspacePro()">${t('pro.save')}</button>
-      ${v.statut==='actif' ? `<button class="btn ghost" style="margin-top:10px;" onclick="openExternal('${API_BASE}/entreprise.php?slug=${v.slug}')">${t('pro.view')}</button>` : ''}
+      <button class="btn" onclick="submitEspacePro()">Enregistrer les modifications</button>
+      ${v.statut==='actif' ? `<button class="btn ghost" style="margin-top:10px;" onclick="openExternal('${API_BASE}/entreprise.php?slug=${v.slug}')">Voir ma vitrine</button>` : ''}
     `;
   }catch(e){
-    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">'+t('net.error')+'</p>';
+    document.getElementById('subpageBody').innerHTML = '<p class="subpage-loading">Erreur réseau.</p>';
   }
 }
 async function submitEspacePro(){
@@ -1445,9 +1374,9 @@ async function submitEspacePro(){
   msgEl.textContent = '';
   try{
     const data = await apiFetch('/api_espace_pro_update.php', {method:'POST', body: JSON.stringify(payload)});
-    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = t('pro.updated'); }
-    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || t('common.err'); }
-  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = t('net.error'); }
+    if(data.success){ msgEl.style.color = '#16a34a'; msgEl.textContent = 'Vitrine mise à jour.'; }
+    else { msgEl.style.color = '#dc2626'; msgEl.textContent = data.error || 'Erreur.'; }
+  }catch(e){ msgEl.style.color = '#dc2626'; msgEl.textContent = 'Erreur réseau.'; }
 }
 
 /* ---------- DÉPOSER UNE ANNONCE ---------- */
@@ -1467,23 +1396,23 @@ function renderDeposerForm(){
   dPhotos.forEach(p => URL.revokeObjectURL(p.url));
   dPhotos = [];
   f.innerHTML = `
-    <h3 class="section" data-i18n="post.title">Déposer une annonce</h3>
+    <h3 class="section">Déposer une annonce</h3>
     <datalist id="dCityList"></datalist>
     <input type="file" id="dPhotoInput" accept="image/*" multiple style="display:none">
-    <div class="upload" onclick="document.getElementById('dPhotoInput').click()">📷<br>${t('post.add_photos',{n:D_MAX_PHOTOS})}<br><small>${t('post.first_photo')}</small></div>
+    <div class="upload" onclick="document.getElementById('dPhotoInput').click()">📷<br>Ajouter des photos (${D_MAX_PHOTOS} max)<br><small>La première sera la photo principale</small></div>
     <div id="dThumbs" class="img-thumb-row"></div>
-    <div class="field"><label data-i18n="post.f_title">Titre *</label><input id="dTitle" maxlength="120" data-i18n-ph="ph.title" placeholder="Ex : Vélo électrique en très bon état"></div>
-    <div class="field"><label data-i18n="post.f_cat">Catégorie *</label><select id="dCat" autocomplete="off"></select></div>
-    <div class="field" id="dSubField" style="display:none"><label id="dSubLabel">${t('post.f_sub')}</label><select id="dSub"></select></div>
-    <div class="field"><label data-i18n="post.f_price">Prix (DH)</label><input id="dPrice" type="number" inputmode="decimal" min="0" step="0.01" data-i18n-ph="ph.price" placeholder="Laisser vide si non précisé"></div>
-    <div class="field"><label data-i18n="post.f_desc">Description</label>
-  <button type="button" class="btn ghost small" id="dAiBtn" style="margin-bottom:8px;" onclick="generateDescription()">${aiT().btn}</button>
-  <textarea id="dDesc" rows="5" data-i18n-ph="ph.desc" placeholder="Décrivez votre bien : état, caractéristiques…"></textarea>
-  <div id="dAiHint" style="display:none;font-size:12.5px;line-height:1.45;margin-top:6px;border-radius:10px;padding:9px 11px;"></div></div>
-    <div class="field"><label data-i18n="post.f_city">Ville *</label><input id="dCity" list="dCityList" autocomplete="off" data-i18n-ph="ph.city" placeholder="Tapez une ville"></div>
-    <div class="field"><label data-i18n="post.f_tel">Téléphone (10 chiffres)</label><input id="dTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
+    <div class="field"><label>Titre *</label><input id="dTitle" maxlength="120" placeholder="Ex : Vélo électrique en très bon état"></div>
+    <div class="field"><label>Catégorie *</label><select id="dCat" autocomplete="off"></select></div>
+    <div class="field" id="dSubField" style="display:none"><label id="dSubLabel">Sous-catégorie</label><select id="dSub"></select></div>
+    <div class="field"><label>Prix (€)</label><input id="dPrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Laisser vide si non précisé"></div>
+    <div class="field"><label>Description</label>
+      <button type="button" class="btn ghost small" id="dAiBtn" style="margin-bottom:8px;" onclick="generateDescription()">✨ Générer une description</button>
+      <textarea id="dDesc" rows="5" placeholder="Décrivez votre bien : état, caractéristiques…"></textarea>
+      <div id="dAiHint" style="display:none;font-size:12.5px;line-height:1.45;margin-top:6px;border-radius:10px;padding:9px 11px;"></div></div>
+    <div class="field"><label>Ville *</label><input id="dCity" list="dCityList" autocomplete="off" placeholder="Tapez une ville"></div>
+    <div class="field"><label>Téléphone (10 chiffres)</label><input id="dTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
     <div id="dMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
-    <button class="btn" id="dBtn" onclick="submitAd()" data-i18n="post.publish">Publier l'annonce</button>
+    <button class="btn" id="dBtn" onclick="submitAd()">Publier l'annonce</button>
   `;
   document.getElementById('dPhotoInput').addEventListener('change', onPhotosPicked);
   document.getElementById('dTel').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
@@ -1503,8 +1432,8 @@ function fillDeposerCategories(){
   if(!sel) return;
   if(!categories.length){ sel.innerHTML = '<option value="">Chargement…</option>'; return; }
   const prev = sel.value;
-  sel.innerHTML = '<option value="">'+t('post.choose')+'</option>' +
-    categories.map(c => `<option value="${c.id}">${escapeHtml(catLabel(c))}</option>`).join('');
+  sel.innerHTML = '<option value="">Choisir…</option>' +
+    categories.map(c => `<option value="${c.id}">${escapeHtml(metaFor(c.slug).label)}</option>`).join('');
   if(prev) sel.value = prev;
   if(sel.value) onDepCatChange();
 }
@@ -1532,27 +1461,26 @@ async function onDepCatChange(){
   const cid = catSel.value;
   sub.innerHTML = ''; field.style.display = 'none';
   if(!cid) return;
-  const key = cid + '|' + LANG;
-  if(!depSubCache[key]){
+  if(!depSubCache[cid]){
     try{
       const d = await apiFetch('/api_filters.php?category_id=' + cid);
-      depSubCache[key] = (d && d.success && d.tree) ? d.tree : [];
-    }catch(e){ depSubCache[key] = []; }
+      depSubCache[cid] = (d && d.success && d.tree) ? d.tree : [];
+    }catch(e){ depSubCache[cid] = []; }
   }
   if(catSel.value !== cid) return; // la catégorie a changé entre-temps
-  let tree = depSubCache[key];
+  let tree = depSubCache[cid];
   const c = categories.find(x => String(x.id) === cid);
-  const isOza = !!(c && normSlug(c.slug) === 'ozamarket');
+  const isOza = !!(c && c.slug === 'ozamarket');
   // Sans réponse de api_filters.php : OZAMarket propose quand même ses sous-catégories (le serveur retrouve l'identifiant)
-  if(!tree.length && isOza) tree = SUB_DEFAULTS.map(k => ({ id:'k:' + k, name:subDefaultName(k), children:[], _icon:SUB_META[k].icon }));
+  if(!tree.length && isOza) tree = SUB_DEFAULTS.map(k => ({ id:'k:' + k, name:SUB_META[k].name, children:[], _icon:SUB_META[k].icon }));
   if(!tree.length) return;
-  const opt = n => `<option value="${n.id}">${escapeHtml((n._icon || subIcon(n)) + ' ' + subName(n))}</option>`;
-  sub.innerHTML = '<option value="">' + t('post.choose') + '</option>' + tree.map(n =>
+  const opt = n => `<option value="${n.id}">${escapeHtml((n._icon || subIcon(n)) + ' ' + n.name)}</option>`;
+  sub.innerHTML = '<option value="">Choisir…</option>' + tree.map(n =>
     (n.children && n.children.length)
-      ? `<optgroup label="${escapeHtml(subName(n))}">${n.children.map(opt).join('')}</optgroup>`
+      ? `<optgroup label="${escapeHtml(n.name)}">${n.children.map(opt).join('')}</optgroup>`
       : opt(n)
   ).join('');
-  document.getElementById('dSubLabel').textContent = t('post.f_sub') + (isOza ? ' *' : '');
+  document.getElementById('dSubLabel').textContent = 'Sous-catégorie' + (isOza ? ' *' : '');
   field.dataset.required = isOza ? '1' : '';
   field.style.display = '';
 }
@@ -1570,8 +1498,8 @@ async function onPhotosPicked(e){
       dPhotos.push({ blob, url: URL.createObjectURL(blob) });
     }catch(err){ msg.textContent = 'Photo illisible : ' + file.name; }
   }
-   renderDPhotos();
-  scheduleAutoDescription();   // ← nouvelle ligne
+  renderDPhotos();
+  scheduleAutoDescription();
 }
 
 // Réduit la photo (max 1600 px, JPEG) : envoi plus rapide, moins de risque de dépasser les limites du serveur
@@ -1604,6 +1532,7 @@ function removeDPhoto(i){
   renderDPhotos();
 }
 
+/* ---------- DESCRIPTION AUTOMATIQUE (api_ad_describe.php) ---------- */
 const blobToB64 = b => new Promise((res, rej) => {
   const r = new FileReader();
   r.onload = () => res(r.result.split(',')[1]); r.onerror = rej;
@@ -1611,30 +1540,13 @@ const blobToB64 = b => new Promise((res, rej) => {
 });
 
 let aiState = { sig:'', text:'', busy:false };
-
 const AI_TXT = {
-  fr:{need:"💡 Saisissez d'abord un titre (et si possible vos photos).",
-      busy:"✨ Rédaction en cours…", btn:"✨ Générer une description", again:"✨ Proposer une autre version",
-      ai:"✨ Proposition rédigée à partir de votre titre et de vos photos. Relisez-la et adaptez-la avant de publier.",
-      tpl:"📝 Modèle de description. Ajoutez les détails de votre bien avant de publier.",
-      todo:"À compléter : ", replace:"Remplacer la description actuelle ?"},
-  en:{need:"💡 Enter a title first (and your photos if possible).",
-      busy:"✨ Writing…", btn:"✨ Generate a description", again:"✨ Suggest another version",
-      ai:"✨ Suggestion written from your title and photos. Please review and adapt it before publishing.",
-      tpl:"📝 Description template. Add your item's details before publishing.",
-      todo:"To complete: ", replace:"Replace the current description?"},
-  ar:{need:"💡 اكتب العنوان أولاً (والصور إن أمكن).",
-      busy:"✨ جارٍ الكتابة…", btn:"✨ إنشاء وصف", again:"✨ اقتراح صيغة أخرى",
-      ai:"✨ اقتراح مكتوب انطلاقاً من عنوانك وصورك. راجعه وعدّله قبل النشر.",
-      tpl:"📝 نموذج وصف. أضف تفاصيل منتجك قبل النشر.",
-      todo:"للإكمال: ", replace:"استبدال الوصف الحالي؟"},
-  es:{need:"💡 Escriba primero un título (y sus fotos si es posible).",
-      busy:"✨ Redactando…", btn:"✨ Generar una descripción", again:"✨ Proponer otra versión",
-      ai:"✨ Propuesta redactada a partir de su título y fotos. Revísela y adáptela antes de publicar.",
-      tpl:"📝 Modelo de descripción. Añada los detalles de su artículo antes de publicar.",
-      todo:"Por completar: ", replace:"¿Reemplazar la descripción actual?"}
+  need:"💡 Saisissez d'abord un titre (et si possible vos photos).",
+  busy:"✨ Rédaction en cours…", btn:"✨ Générer une description", again:"✨ Proposer une autre version",
+  ai:"✨ Proposition rédigée à partir de votre titre et de vos photos. Relisez-la et adaptez-la avant de publier.",
+  tpl:"📝 Modèle de description. Ajoutez les détails de votre bien avant de publier.",
+  todo:"À compléter : ", replace:"Remplacer la description actuelle ?"
 };
-const aiT = () => AI_TXT[LANG] || AI_TXT.fr;
 
 function showAiHint(html, kind){
   const el = document.getElementById('dAiHint'); if(!el) return;
@@ -1656,18 +1568,18 @@ function scheduleAutoDescription(){
 async function generateDescription(auto){
   auto = (auto === true); // true = déclenchement automatique, sinon clic sur le bouton
   const ta = document.getElementById('dDesc'), btn = document.getElementById('dAiBtn');
-  if(!ta) return;
+  if(!ta || !btn) return;
   if(aiState.busy){ if(auto) scheduleAutoDescription(); return; }
 
   const v = id => document.getElementById(id).value.trim();
   const title = v('dTitle');
-  if(title.length < 3){ if(!auto) showAiHint(aiT().need, 'info'); return; }
+  if(title.length < 3){ if(!auto) showAiHint(AI_TXT.need, 'info'); return; }
 
   // Ne jamais écraser un texte saisi par l'annonceur
   const cur = ta.value.trim();
   const userText = cur !== '' && cur !== aiState.text;
   if(auto && userText) return;
-  if(!auto && userText && !confirm(aiT().replace)) return;
+  if(!auto && userText && !confirm(AI_TXT.replace)) return;
 
   // Évite les appels inutiles (limite de 10 par heure)
   const sel = document.getElementById('dCat');
@@ -1677,8 +1589,8 @@ async function generateDescription(auto){
   if(auto && sig === aiState.sig) return;
   aiState.sig = sig;
 
-  aiState.busy = true; btn.disabled = true; btn.textContent = aiT().busy;
-  showAiHint(aiT().busy, 'info');
+  aiState.busy = true; btn.disabled = true; btn.textContent = AI_TXT.busy;
+  showAiHint(AI_TXT.busy, 'info');
   try{
     const photos = [];
     for(const p of dPhotos.slice(0, 3)) photos.push(await blobToB64(await downscaleImage(p.blob, 768, 0.7)));
@@ -1688,26 +1600,25 @@ async function generateDescription(auto){
       subcategory: subTxt,
       city: v('dCity'),
       price: v('dPrice'),
-      lang: LANG,
+      lang: 'fr',
       photos: photos,
-      currency: 'DH'
+      currency: '€'
     };
     const data = await apiFetch('/api_ad_describe.php', {method:'POST', body: JSON.stringify(payload)});
     if(data.success){
       ta.value = data.description; aiState.text = data.description;
       if(data.debug) console.warn('Diagnostic IA :', data.debug);
-      showAiHint((data.source === 'ai' ? aiT().ai : aiT().tpl)
-        + (data.todo ? '<br><b>' + aiT().todo + '</b>' + escapeHtml(data.todo) : '')
-        + (data.debug ? '<br><small>' + escapeHtml(data.debug) + '</small>' : ''), 'ok'); // debug : à retirer en production
-      btn.textContent = aiT().again;
+      showAiHint((data.source === 'ai' ? AI_TXT.ai : AI_TXT.tpl)
+        + (data.todo ? '<br><b>' + AI_TXT.todo + '</b>' + escapeHtml(data.todo) : ''), 'ok');
+      btn.textContent = AI_TXT.again;
     } else {
-      showAiHint(escapeHtml(data.error || t('common.err')), 'info');
-      btn.textContent = aiT().btn;
+      showAiHint(escapeHtml(data.error || 'Une erreur est survenue.'), 'info');
+      btn.textContent = AI_TXT.btn;
     }
   }catch(e){
     console.warn('describe error', e);
-    showAiHint(t('net.error') + ' <small>(' + escapeHtml(e.message || String(e)) + ')</small>', 'info');
-    btn.textContent = aiT().btn;
+    showAiHint('Erreur réseau.', 'info');
+    btn.textContent = AI_TXT.btn;
   }
   btn.disabled = false; aiState.busy = false;
 }
@@ -1717,16 +1628,16 @@ async function submitAd(){
   const msg = document.getElementById('dMsg');
   msg.textContent = '';
   const title = v('dTitle'), cat = v('dCat'), city = v('dCity'), tel = v('dTel'), price = v('dPrice');
-  if(title.length < 3) return msg.textContent = t('post.err_title');
-  if(!cat) return msg.textContent = t('post.err_cat');
+  if(title.length < 3) return msg.textContent = 'Le titre doit contenir au moins 3 caractères.';
+  if(!cat) return msg.textContent = 'Choisissez une catégorie.';
   const subField = document.getElementById('dSubField'), subEl = document.getElementById('dSub'), subVal = subEl ? subEl.value : '';
-  if(subField && subField.style.display !== 'none' && subField.dataset.required && !subVal) return msg.textContent = t('post.err_sub');
-  if(!city) return msg.textContent = t('post.err_city');
-  if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = t('post.err_tel');
-  if(price !== '' && (isNaN(price) || Number(price) < 0)) return msg.textContent = t('post.err_price');
+  if(subField && subField.style.display !== 'none' && subField.dataset.required && !subVal) return msg.textContent = 'Choisissez une sous-catégorie.';
+  if(!city) return msg.textContent = 'La ville est requise.';
+  if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = 'Le téléphone doit contenir exactement 10 chiffres.';
+  if(price !== '' && (isNaN(price) || Number(price) < 0)) return msg.textContent = 'Prix invalide.';
 
   const btn = document.getElementById('dBtn');
-  btn.disabled = true; btn.textContent = t('post.publishing');
+  btn.disabled = true; btn.textContent = 'Publication en cours…';
 
   const fd = new FormData();
   fd.append('title', title);
@@ -1748,87 +1659,62 @@ async function submitAd(){
       document.getElementById('deposer-form').innerHTML = `
         <div id="dSuccess" style="text-align:center;padding:24px 4px;">
           <div style="font-size:46px;">✅</div>
-          <h3 style="margin:10px 0 8px;">${live ? t('post.published') : t('post.sent')}</h3>
+          <h3 style="margin:10px 0 8px;">Annonce ${live ? 'publiée' : 'envoyée'}</h3>
           <p style="color:#555;font-size:14.5px;line-height:1.5;">${escapeHtml(data.message || '')}</p>
-          <button class="btn" style="margin-top:18px;" onclick="openMesAnnonces()">${t('post.view_mine')}</button>
-          <button class="btn ghost" style="margin-top:10px;" onclick="renderDeposerForm()">${t('post.another')}</button>
+          <button class="btn" style="margin-top:18px;" onclick="openMesAnnonces()">Voir mes annonces</button>
+          <button class="btn ghost" style="margin-top:10px;" onclick="renderDeposerForm()">Déposer une autre annonce</button>
         </div>`;
       loadListings(null, 'homeList');
     } else {
       msg.textContent = data.error || "Erreur lors de la publication.";
-      if(data.code === 'not_logged_in' || data.error === 'Non connecté.'){ currentUser = null; updateDeposerGate(); }
-      btn.disabled = false; btn.textContent = t('post.publish');
+      if(data.error === 'Non connecté.'){ currentUser = null; updateDeposerGate(); }
+      btn.disabled = false; btn.textContent = "Publier l'annonce";
     }
   }catch(e){
     msg.textContent = 'Erreur réseau. Vérifiez votre connexion et réessayez.';
-    btn.disabled = false; btn.textContent = t('post.publish');
+    btn.disabled = false; btn.textContent = "Publier l'annonce";
   }
 }
 
 /* ---------- AUTOCOMPLÉTION VILLE (API gouvernementale, comme sur le site) ---------- */
 let cityTimer = null;
 function bindCityAutocomplete(inputId, listId){
-  const inp = document.getElementById(inputId);
-  if(!inp) return;
-  const old = document.getElementById(listId); if(old) old.remove(); // le datalist n'est plus utilisé
-  inp.removeAttribute('list');
-
-  const box = document.createElement('div');
-  box.style.cssText = 'display:none;background:#fff;border:1px solid var(--border);border-radius:12px;' +
-    'margin-top:4px;max-height:220px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.08);';
-  inp.insertAdjacentElement('afterend', box);
-
+  const inp = document.getElementById(inputId), dl = document.getElementById(listId);
+  if(!inp || !dl) return;
   inp.addEventListener('input', () => {
     clearTimeout(cityTimer);
     const v = inp.value.trim();
-    if(v.length < 2){ box.style.display = 'none'; return; }
+    if(v.length < 2){ dl.innerHTML = ''; return; }
     cityTimer = setTimeout(async () => {
       try{
-        let names;
-        if(API_BASE.endsWith('.ma')){
-          const r = await fetch(API_BASE + '/get_cities.php?q=' + encodeURIComponent(v) + '&limit=10');
-          const d = await r.json();
-          names = (Array.isArray(d) ? d : []).map(c => typeof c === 'string' ? c : (c.nom || c.name || ''));
-        } else {
-          const r = await fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(v) + '&fields=nom&boost=population&limit=10');
-          names = (await r.json()).map(c => c.nom);
-        }
-        names = names.filter(Boolean);
-        box.innerHTML = names.map(n =>
-          `<div class="cs" style="padding:12px 14px;font-size:14.5px;border-bottom:1px solid var(--border);cursor:pointer;">${escapeHtml(n)}</div>`).join('');
-        box.style.display = names.length ? 'block' : 'none';
-      }catch(e){ box.style.display = 'none'; }
+        const r = await fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(v) + '&fields=nom&boost=population&limit=10');
+        const d = await r.json();
+        dl.innerHTML = d.map(c => `<option value="${escapeHtml(c.nom)}">`).join('');
+      }catch(e){}
     }, 250);
   });
-
-  box.addEventListener('pointerdown', e => {
-    const it = e.target.closest('.cs'); if(!it) return;
-    e.preventDefault();
-    inp.value = it.textContent;
-    box.style.display = 'none';
-  });
-  inp.addEventListener('blur', () => setTimeout(() => box.style.display = 'none', 150));
 }
 
 /* ---------- INSCRIPTION (nouvel adhérent) ---------- */
 function openRegister(){
-  openSubpage(t('auth.create'), 'register');
+  openSubpage('Créer un compte', 'register');
   document.getElementById('subpageBody').innerHTML = `
     <datalist id="rCityList"></datalist>
-    <div class="field"><label data-i18n="reg.nom">Nom *</label><input id="rNom" data-i18n-ph="reg.ph_nom" placeholder="Nom"></div>
-    <div class="field"><label data-i18n="reg.prenom">Prénom</label><input id="rPrenom" data-i18n-ph="reg.ph_prenom" placeholder="Prénom"></div>
-    <div class="field"><label data-i18n="reg.email">Email *</label><input id="rEmail" type="email" placeholder="vous@exemple.com"></div>
-    <div class="field"><label data-i18n="reg.pass">Mot de passe * (8 caractères min.)</label><input id="rPass" type="password"></div>
-    <div class="field"><label data-i18n="reg.pass2">Confirmer le mot de passe *</label><input id="rPass2" type="password"></div>
-    <div class="field"><label data-i18n="post.f_tel">Téléphone (10 chiffres)</label><input id="rTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
-    <div class="field"><label data-i18n="post.f_city">Ville *</label><input id="rCity" list="rCityList" autocomplete="off" data-i18n-ph="ph.city" placeholder="Tapez une ville"></div>
+    <div class="field"><label>Nom *</label><input id="rNom" placeholder="Nom"></div>
+    <div class="field"><label>Prénom</label><input id="rPrenom" placeholder="Prénom"></div>
+    <div class="field"><label>Email *</label><input id="rEmail" type="email" placeholder="vous@exemple.com"></div>
+    <div class="field"><label>Mot de passe * (8 caractères min.)</label><input id="rPass" type="password"></div>
+    <div class="field"><label>Confirmer le mot de passe *</label><input id="rPass2" type="password"></div>
+    <div class="field"><label>Téléphone (10 chiffres)</label><input id="rTel" type="tel" inputmode="numeric" maxlength="10" placeholder="0612345678"></div>
+    <div class="field"><label>Ville *</label><input id="rCity" list="rCityList" autocomplete="off" placeholder="Tapez une ville"></div>
     <label style="display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#555;margin:6px 0 14px;">
       <input type="checkbox" id="rTerms" style="margin-top:3px;">
-      <span>${t('reg.terms_pre')}<a href="#" onclick="openExternal(API_BASE+'/terms.php');return false;">${t('reg.terms_link')}</a>${t('reg.terms_mid')}<a href="#" onclick="openExternal(API_BASE+'/privacy.php');return false;">${t('reg.privacy_link')}</a>${t('reg.terms_post')}</span>
+      <span>J'accepte les <a href="#" onclick="openExternal(API_BASE+'/terms.php');return false;">conditions d'utilisation</a>
+      et la <a href="#" onclick="openExternal(API_BASE+'/privacy.php');return false;">politique de confidentialité</a>.</span>
     </label>
     <div id="rMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
-    <button class="btn" id="rBtn" onclick="submitRegister()" data-i18n="reg.submit">S'inscrire</button>
-    <button class="btn ghost" style="margin-top:10px;" onclick="closeSubpage();closeDetail();go('profil')" data-i18n="reg.have_account">J'ai déjà un compte</button>
+    <button class="btn" id="rBtn" onclick="submitRegister()">S'inscrire</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="closeSubpage();closeDetail();go('profil')">J'ai déjà un compte</button>
   `;
   document.getElementById('rTel').addEventListener('input', function(){ this.value = this.value.replace(/\D/g,''); });
   bindCityAutocomplete('rCity', 'rCityList');
@@ -1841,16 +1727,16 @@ async function submitRegister(){
   const msg = document.getElementById('rMsg');
   msg.textContent = '';
 
-  if(nom.length < 2) return msg.textContent = t('reg.err_name');
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = t('err.email');
-  if(pass.length < 8) return msg.textContent = t('err.pass8');
-  if(pass !== pass2) return msg.textContent = t('err.pass_match');
-  if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = t('post.err_tel');
-  if(city === '') return msg.textContent = t('post.err_city');
-  if(!document.getElementById('rTerms').checked) return msg.textContent = t('err.terms');
+  if(nom.length < 2) return msg.textContent = 'Le nom doit contenir au moins 2 caractères.';
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = 'Veuillez entrer un email valide.';
+  if(pass.length < 8) return msg.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+  if(pass !== pass2) return msg.textContent = 'Les mots de passe ne correspondent pas.';
+  if(tel !== '' && !/^\d{10}$/.test(tel)) return msg.textContent = 'Le téléphone doit contenir exactement 10 chiffres.';
+  if(city === '') return msg.textContent = 'La ville est requise.';
+  if(!document.getElementById('rTerms').checked) return msg.textContent = "Vous devez accepter les conditions d'utilisation.";
 
   const btn = document.getElementById('rBtn');
-  btn.disabled = true; btn.textContent = t('reg.signing');
+  btn.disabled = true; btn.textContent = 'Inscription…';
   try{
     const data = await apiFetch('/api_register.php', {method:'POST', body: JSON.stringify({
       nom, prenom: v('rPrenom'), email, password: pass, confirm_password: pass2,
@@ -1860,59 +1746,61 @@ async function submitRegister(){
       document.getElementById('subpageBody').innerHTML = `
         <div style="text-align:center;padding:24px 4px;">
           <div style="font-size:46px;">📧</div>
-          <h3 style="margin:10px 0 8px;" data-i18n="reg.done_t">Compte créé !</h3>
-          <p style="color:#555;font-size:14.5px;line-height:1.5;">${t('reg.done_body',{email:'<b>'+escapeHtml(email)+'</b>'})}</p>
-          ${data.email_sent ? '' : '<p style="color:#b45309;font-size:13px;">'+t('reg.email_warn')+'</p>'}
-          <button class="btn" style="margin-top:18px;" onclick="closeSubpage();closeDetail();go('profil')" data-i18n="reg.go_login">Aller à la connexion</button>
+          <h3 style="margin:10px 0 8px;">Compte créé !</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">Un email de confirmation a été envoyé à <b>${escapeHtml(email)}</b>.
+          Cliquez sur le lien qu'il contient pour activer votre compte, puis connectez-vous.</p>
+          ${data.email_sent ? '' : '<p style="color:#b45309;font-size:13px;">L\'envoi de l\'email a peut-être échoué — contactez-nous si vous ne le recevez pas.</p>'}
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage();closeDetail();go('profil')">Aller à la connexion</button>
         </div>`;
     } else {
-      msg.textContent = data.error || t('reg.fail');
-      btn.disabled = false; btn.textContent = t('reg.submit');
+      msg.textContent = data.error || "Erreur lors de l'inscription.";
+      btn.disabled = false; btn.textContent = "S'inscrire";
     }
   }catch(e){
-    msg.textContent = t('net.error');
-    btn.disabled = false; btn.textContent = t('reg.submit');
+    msg.textContent = 'Erreur réseau.';
+    btn.disabled = false; btn.textContent = "S'inscrire";
   }
 }
 
 /* ---------- DEMANDE DE VITRINE PRO ("Créer ma vitrine") ---------- */
 function openProDemande(){
-  openSubpage(t('pd.title'), 'pro-demande');
+  openSubpage('Créer ma vitrine', 'pro-demande');
   const secteurs = ['Agence immobilière','Garage / Concession auto','Artisan / BTP','Commerce','Services aux entreprises','Location saisonnière','Autre'];
   document.getElementById('subpageBody').innerHTML = `
     <datalist id="pCityList"></datalist>
-    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">${t('pd.intro')}</p>
-    <div class="field"><label>${t('pd.f_ent')}</label><input id="pEnt"></div>
-    <div class="field"><label>${t('pro.f_sector')}</label>
-      <select id="pSect"><option value="">${t('post.choose')}</option>${secteurs.map((s,i)=>`<option value="${s}">${t('sect.'+i)}</option>`).join('')}</select></div>
-    <div class="field"><label>${t('pd.f_contact')}</label><input id="pContact" value="${escapeHtml((currentUser && currentUser.nom) || '')}"></div>
-    <div class="field"><label data-i18n="filters.city">Ville</label><input id="pVille" list="pCityList" autocomplete="off"></div>
-    <div class="field"><label>${t('pd.f_email')}</label><input id="pEmail" type="email" value="${escapeHtml((currentUser && currentUser.email) || '')}"></div>
-    <div class="field"><label>${t('common.phone')}</label><input id="pTel" type="tel"></div>
-    <div class="field"><label>${t('pd.f_plan')}</label>
+    <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Dites-nous qui vous êtes : nous préparons votre page et vous la présentons avant sa mise en ligne. Sans engagement.</p>
+    <div class="field"><label>Nom de l'entreprise *</label><input id="pEnt"></div>
+    <div class="field"><label>Secteur</label>
+      <select id="pSect"><option value="">Choisir…</option>${secteurs.map(s=>`<option>${s}</option>`).join('')}</select></div>
+    <div class="field"><label>Votre nom *</label><input id="pContact" value="${escapeHtml((currentUser && currentUser.nom) || '')}"></div>
+    <div class="field"><label>Ville</label><input id="pVille" list="pCityList" autocomplete="off"></div>
+    <div class="field"><label>E-mail *</label><input id="pEmail" type="email" value="${escapeHtml((currentUser && currentUser.email) || '')}"></div>
+    <div class="field"><label>Téléphone</label><input id="pTel" type="tel"></div>
+    <div class="field"><label>Formule souhaitée</label>
       <select id="pPlan">
-        <option value="gratuit">${t('pd.p_gratuit')}</option>
-        <option value="pro" selected>${t('pd.p_pro')}</option>
-        <option value="business">${t('pd.p_business')}</option>
-        <option value="entreprise">${t('pd.p_entreprise')}</option>
+        <option value="gratuit">Découverte — gratuit</option>
+        <option value="pro" selected>Pro — offert pendant le lancement</option>
+        <option value="business">Business — sur demande</option>
+        <option value="entreprise">Entreprise — sur devis</option>
       </select></div>
-    <div class="field"><label>${t('pd.f_vol')}</label><input id="pVol" placeholder="${t('pd.vol_ph')}"></div>
-    <div class="field"><label>${t('pd.f_msg')}</label><textarea id="pMessage" rows="3"></textarea></div>
+    <div class="field"><label>Annonces en ligne aujourd'hui</label><input id="pVol" placeholder="Ex. une trentaine, toutes plateformes confondues"></div>
+    <div class="field"><label>Autre chose à nous dire ?</label><textarea id="pMessage" rows="3"></textarea></div>
     <div id="pMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
-    <button class="btn" id="pBtn" onclick="submitProDemande()">${t('pd.send')}</button>
+    <button class="btn" id="pBtn" onclick="submitProDemande()">Envoyer ma demande</button>
   `;
   bindCityAutocomplete('pVille', 'pCityList');
 }
+
 
 async function submitProDemande(){
   const v = id => document.getElementById(id).value.trim();
   const msg = document.getElementById('pMsg');
   msg.textContent = '';
-  if(!v('pEnt') || !v('pContact')) return msg.textContent = t('pd.err_req');
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('pEmail'))) return msg.textContent = t('err.email');
+  if(!v('pEnt') || !v('pContact')) return msg.textContent = "Le nom de l'entreprise et votre nom sont obligatoires.";
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('pEmail'))) return msg.textContent = 'Veuillez entrer un email valide.';
 
   const btn = document.getElementById('pBtn');
-  btn.disabled = true; btn.textContent = t('pd.sending');
+  btn.disabled = true; btn.textContent = 'Envoi…';
   try{
     const data = await apiFetch('/api_pro_demande.php', {method:'POST', body: JSON.stringify({
       entreprise: v('pEnt'), secteur: v('pSect'), contact: v('pContact'), ville: v('pVille'),
@@ -1922,38 +1810,22 @@ async function submitProDemande(){
       document.getElementById('subpageBody').innerHTML = `
         <div style="text-align:center;padding:24px 4px;">
           <div style="font-size:46px;">✅</div>
-          <h3 style="margin:10px 0 8px;">${t('pd.done_t')}</h3>
-          <p style="color:#555;font-size:14.5px;line-height:1.5;">${t('pd.done_body')}</p>
-          <button class="btn" style="margin-top:18px;" onclick="closeSubpage()">${t('common.close')}</button>
+          <h3 style="margin:10px 0 8px;">Demande envoyée</h3>
+          <p style="color:#555;font-size:14.5px;line-height:1.5;">Nous revenons vers vous sous 48 heures ouvrées pour préparer votre vitrine.</p>
+          <button class="btn" style="margin-top:18px;" onclick="closeSubpage()">Fermer</button>
         </div>`;
     } else {
-      msg.textContent = data.error || t('pd.fail');
-      btn.disabled = false; btn.textContent = t('pd.send');
+      msg.textContent = data.error || "L'envoi n'a pas abouti.";
+      btn.disabled = false; btn.textContent = 'Envoyer ma demande';
     }
   }catch(e){
-    msg.textContent = t('net.error');
-    btn.disabled = false; btn.textContent = t('pd.send');
+    msg.textContent = 'Erreur réseau.';
+    btn.disabled = false; btn.textContent = 'Envoyer ma demande';
   }
 }
 
 /* ---------- FILTRES DE RECHERCHE ---------- */
 const searchFilters = { q:'', city:'', priceMin:'', priceMax:'', type:'', subId:null, subLabel:'' };
-
-/* Retrouve un nœud de sous-catégorie (arbre OZAMarket de l'accueil ou arbre de la sous-page Filtres) */
-function findSubNode(id, nodes){
-  for(const n of (nodes || [])){
-    if(n.id === id) return n;
-    const r = findSubNode(id, n.children);
-    if(r) return r;
-  }
-  return null;
-}
-function collectSubIds(n){ return [n.id].concat(...(n.children || []).map(collectSubIds)); }
-// id de la sous-catégorie + ids de tous ses descendants
-function subIdsFor(id){
-  const n = findSubNode(id, ozaSubs.nodes) || findSubNode(id, fltTree);
-  return n ? collectSubIds(n) : [id];
-}
 
 function buildUrl(targetId, page, categoryId){
   if(targetId === 'homeList'){
@@ -1962,16 +1834,10 @@ function buildUrl(targetId, page, categoryId){
     return u;
   }
   const f = searchFilters, p = new URLSearchParams({ page });
-  if(f.subId){
-    // Une sous-catégorie identifie déjà sa catégorie : on n'envoie PAS category_id
-    // (sinon le serveur croise les deux critères et renvoie 0 résultat pour OZAMarket).
-    // On envoie aussi tous les descendants, pour qu'un parent (« Tout X ») ramène les annonces de ses enfants.
-    const ids = subIdsFor(f.subId);
-    p.set('subcategory_id', f.subId);
-    if(ids.length > 1) p.set('subcategory_ids', ids.join(','));
-  } else if(categoryId){
-    p.set('category_id', categoryId);
-  }
+  // Une sous-catégorie identifie déjà sa catégorie : on n'envoie pas category_id avec elle
+  // (le serveur résout lui-même les sous-niveaux).
+  if(f.subId)          p.set('subcategory_id', f.subId);
+  else if(categoryId)  p.set('category_id', categoryId);
   if(f.q)         p.set('q', f.q);
   if(f.city)      p.set('city', f.city);
   if(f.priceMin !== '') p.set('price_min', f.priceMin);
@@ -1991,11 +1857,11 @@ function renderFilterSummary(){
   if(f.subLabel) parts.push(f.subLabel);
   if(f.city) parts.push('📍 ' + f.city);
   if(f.priceMin !== '' || f.priceMax !== '') parts.push((f.priceMin || 0) + ' – ' + (f.priceMax || '∞'));
-  if(f.type) parts.push(f.type === 'offer' ? t('filters.sell') : t('filters.seek'));
+  if(f.type) parts.push(f.type === 'offer' ? 'Je vends' : 'Je recherche');
   const n = (f.subId?1:0) + (f.city?1:0) + ((f.priceMin!==''||f.priceMax!=='')?1:0) + (f.type?1:0);
   document.getElementById('fltBadge').textContent = n ? ' (' + n + ')' : '';
   document.getElementById('fltSummary').innerHTML = parts.length
-    ? escapeHtml(parts.join(' · ')) + ' — <a href="#" style="color:var(--orange-dark);font-weight:600;" onclick="resetSearchFilters(true);return false;">'+t('list.clear')+'</a>'
+    ? escapeHtml(parts.join(' · ')) + ' — <a href="#" style="color:var(--orange-dark);font-weight:600;" onclick="resetSearchFilters(true);return false;">Effacer</a>'
     : '';
 }
 
@@ -2015,6 +1881,7 @@ document.getElementById('homeQ').addEventListener('keydown', e => {
     runSearch(); go('annonces');
   }
 });
+
 function doSearch(){
   searchFilters.q = document.getElementById('fltQ').value.trim();
   runSearch();
@@ -2025,32 +1892,31 @@ function doHomeSearch(){
   document.getElementById('fltQ').value = v;
   runSearch(); go('annonces');
 }
-
 /* Sous-page "Filtres" */
 let fltTree = [], fltIndex = {}, fltStack = [], fltPending = { id:null, label:'' };
 
 async function openFilters(){
-  openSubpage(t('filters.title'), 'filters');
+  openSubpage('Filtres', 'filters');
   const f = searchFilters;
   fltPending = { id: f.subId, label: f.subLabel };
   fltStack = []; fltTree = []; fltIndex = {};
   fltCat = currentCategoryId;
-  const catOpts = '<option value="">'+t('filters.all_cats')+'</option>' +
-    categories.map(c => `<option value="${c.id}" ${c.id===fltCat?'selected':''}>${escapeHtml(metaFor(c.slug).icon + ' ' + catLabel(c))}</option>`).join('');
+  const catOpts = '<option value="">Toutes les catégories</option>' +
+    categories.map(c => `<option value="${c.id}" ${c.id===fltCat?'selected':''}>${escapeHtml(metaFor(c.slug).icon + ' ' + metaFor(c.slug).label)}</option>`).join('');
   document.getElementById('subpageBody').innerHTML = `
-    <div class="field"><label data-i18n="filters.cat">Catégorie</label>
+    <div class="field"><label>Catégorie</label>
       <select id="fltCat" onchange="onFltCatChange(this.value)">${catOpts}</select></div>
     <div id="fltSubWrap"></div>
     <datalist id="fCityList"></datalist>
-    <div class="field" style="margin-top:14px;"><label data-i18n="filters.city">Ville</label>
-      <input id="fltCity" list="fCityList" autocomplete="off" data-i18n-ph="filters.all_cities" placeholder="Toutes les villes" value="${escapeHtml(f.city)}"></div>
-    <div class="field"><label data-i18n="filters.pmin">Prix minimum</label>
+    <div class="field" style="margin-top:14px;"><label>Ville</label>
+      <input id="fltCity" list="fCityList" autocomplete="off" placeholder="Toutes les villes" value="${escapeHtml(f.city)}"></div>
+    <div class="field"><label>Prix minimum</label>
       <input id="fltPmin" type="number" inputmode="decimal" min="0" value="${escapeHtml(f.priceMin)}"></div>
-    <div class="field"><label data-i18n="filters.pmax">Prix maximum</label>
+    <div class="field"><label>Prix maximum</label>
       <input id="fltPmax" type="number" inputmode="decimal" min="0" value="${escapeHtml(f.priceMax)}"></div>
     <div id="fltTypeWrap"></div>
-    <button class="btn" onclick="applySearchFilters()">${t('filters.show')}</button>
-    <button class="btn ghost" style="margin-top:10px;" onclick="resetSearchFilters(true);closeSubpage();">${t('filters.reset')}</button>
+    <button class="btn" onclick="applySearchFilters()">Afficher les résultats</button>
+    <button class="btn ghost" style="margin-top:10px;" onclick="resetSearchFilters(true);closeSubpage();">Réinitialiser</button>
   `;
   bindAdCityAutocomplete('fltCity', 'fCityList');
   renderFltType();
@@ -2061,11 +1927,11 @@ let fltCat = null;
 
 function renderFltType(){
   const w = document.getElementById('fltTypeWrap'); if(!w) return;
-  w.innerHTML = fltCat === 4 ? `<div class="field"><label data-i18n="filters.type">Type d'annonce</label>
+  w.innerHTML = fltCat === 4 ? `<div class="field"><label>Type d'annonce</label>
     <select id="fltType">
       <option value="">Toutes</option>
-      <option value="offer" ${searchFilters.type==='offer'?'selected':''}>${t('filters.sell')}</option>
-      <option value="demand" ${searchFilters.type==='demand'?'selected':''}>${t('filters.seek')}</option>
+      <option value="offer" ${searchFilters.type==='offer'?'selected':''}>Je vends</option>
+      <option value="demand" ${searchFilters.type==='demand'?'selected':''}>Je recherche</option>
     </select></div>` : '';
 }
 
@@ -2073,7 +1939,7 @@ async function loadFltTree(){
   const w = document.getElementById('fltSubWrap'); if(!w) return;
   fltStack = []; fltTree = []; fltIndex = {};
   if(!fltCat){ w.innerHTML = ''; return; }
-  w.innerHTML = '<h3 class="section" data-i18n="filters.sub">Sous-catégorie</h3><div id="fltSub"><p class="subpage-loading">Chargement…</p></div>';
+  w.innerHTML = '<h3 class="section">Sous-catégorie</h3><div id="fltSub"><p class="subpage-loading">Chargement…</p></div>';
   try{
     const d = await apiFetch('/api_filters.php?category_id=' + fltCat);
     fltTree = d.success ? d.tree : [];
@@ -2101,18 +1967,18 @@ function renderFltSub(){
     h += `<div class="chip" style="display:inline-block;margin-bottom:10px;" onclick="fltUp()">← ${escapeHtml(cur.name)}</div>`;
     h += row('Tout « ' + cur.name + ' »', `fltPick(${cur.id})`, fltPending.id === cur.id, false);
   } else {
-    h += row(t('filters.all_subs'), 'fltPick(0)', !fltPending.id, false);
+    h += row('Toutes les sous-catégories', 'fltPick(0)', !fltPending.id, false);
   }
   if(!nodes.length && !cur) h += '<p class="subpage-loading">Aucune sous-catégorie.</p>';
   nodes.forEach(n => {
-    h += row(subName(n), n.children.length ? `fltOpen(${n.id})` : `fltPick(${n.id})`, fltPending.id === n.id, n.children.length > 0);
+    h += row(n.name, n.children.length ? `fltOpen(${n.id})` : `fltPick(${n.id})`, fltPending.id === n.id, n.children.length > 0);
   });
   el.innerHTML = h;
 }
 function fltOpen(id){ fltStack.push(fltIndex[id]); renderFltSub(); }
 function fltUp(){ fltStack.pop(); renderFltSub(); }
 function fltPick(id){
-  fltPending = id ? { id, label: subName(fltIndex[id]) } : { id:null, label:'' };
+  fltPending = id ? { id, label: fltIndex[id].name } : { id:null, label:'' };
   renderFltSub();
 }
 
@@ -2166,10 +2032,10 @@ async function submitForgot(){
   const email = document.getElementById('fEmail').value.trim();
   const msg = document.getElementById('fMsg');
   msg.style.color = '#dc2626'; msg.textContent = '';
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = t('err.email');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg.textContent = 'Veuillez entrer un email valide.';
 
   const btn = document.getElementById('fBtn');
-  btn.disabled = true; btn.textContent = t('pd.sending');
+  btn.disabled = true; btn.textContent = 'Envoi…';
   try{
     const data = await apiFetch('/api_forgot_password.php', {method:'POST', body: JSON.stringify({email})});
     if(data.success){
@@ -2182,11 +2048,11 @@ async function submitForgot(){
           <button class="btn ghost" style="margin-top:10px;" onclick="closeSubpage()">Retour à la connexion</button>
         </div>`;
     } else {
-      msg.textContent = data.error || t('pd.fail');
+      msg.textContent = data.error || "L'envoi n'a pas abouti.";
       btn.disabled = false; btn.textContent = 'Envoyer le lien';
     }
   }catch(e){
-    msg.textContent = t('net.error');
+    msg.textContent = 'Erreur réseau.';
     btn.disabled = false; btn.textContent = 'Envoyer le lien';
   }
 }
@@ -2195,7 +2061,7 @@ function openResetPassword(){
   openSubpage('Nouveau mot de passe', 'reset');
   document.getElementById('subpageBody').innerHTML = `
     <p style="color:#555;font-size:14px;line-height:1.5;margin:0 0 16px;">Collez ici le lien reçu par email (ou son code), puis choisissez un nouveau mot de passe.</p>
-    <div class="field"><label>Lien ou code reçu par email *</label><textarea id="rTok" rows="2" placeholder="https://www.ozannonces.ma/...token=..."></textarea></div>
+    <div class="field"><label>Lien ou code reçu par email *</label><textarea id="rTok" rows="2" placeholder="https://www.ozannonces.fr/...token=..."></textarea></div>
     <div class="field"><label>Nouveau mot de passe * (8 caractères min.)</label><input id="rNewPass" type="password"></div>
     <div class="field"><label>Confirmer le mot de passe *</label><input id="rNewPass2" type="password"></div>
     <div id="rsMsg" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
@@ -2217,8 +2083,8 @@ async function submitResetPassword(){
   const msg = document.getElementById('rsMsg');
   msg.textContent = '';
   if(!token) return msg.textContent = 'Collez le lien reçu par email.';
-  if(pass.length < 8) return msg.textContent = t('err.pass8');
-  if(pass !== pass2) return msg.textContent = t('err.pass_match');
+  if(pass.length < 8) return msg.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+  if(pass !== pass2) return msg.textContent = 'Les mots de passe ne correspondent pas.';
 
   const btn = document.getElementById('rsBtn');
   btn.disabled = true; btn.textContent = 'Modification…';
@@ -2235,11 +2101,11 @@ async function submitResetPassword(){
           <button class="btn" style="margin-top:18px;" onclick="closeSubpage();go('profil')">Se connecter</button>
         </div>`;
     } else {
-      msg.textContent = data.error || t('common.err');
+      msg.textContent = data.error || 'Erreur.';
       btn.disabled = false; btn.textContent = 'Modifier mon mot de passe';
     }
   }catch(e){
-    msg.textContent = t('net.error');
+    msg.textContent = 'Erreur réseau.';
     btn.disabled = false; btn.textContent = 'Modifier mon mot de passe';
   }
 }
@@ -2268,11 +2134,11 @@ function renderProfilLoggedIn(user){
     <div class="avatar">${user.initial || '?'}</div>
     <div class="profile-name">${escapeHtml(user.nom)}</div>
     <div class="profile-sub">${escapeHtml(user.email)}</div>
-    <div class="menu-row" onclick="openProfileEdit()"><span class="l">👤 ${t('profile.mine')}</span><span>›</span></div>
-    <div class="menu-row" onclick="openEspacePro()"><span class="l">🏪 ${t('profile.pro')}</span><span>›</span></div>
-    <div class="menu-row" onclick="openMesAnnonces()"><span class="l">📋 ${t('profile.ads')}</span><span>›</span></div>
-    <div class="menu-row" onclick="openMessagerie()"><span class="l">💬 ${t('profile.msgs')}</span><span>›</span></div>
-    <button class="btn ghost" style="margin-top:14px;" onclick="logout()">${t('auth.logout')}</button>
+    <div class="menu-row" onclick="openProfileEdit()"><span class="l">👤 Mon Profil</span><span>›</span></div>
+    <div class="menu-row" onclick="openEspacePro()"><span class="l">🏪 Mon espace pro</span><span>›</span></div>
+    <div class="menu-row" onclick="openMesAnnonces()"><span class="l">📋 Mes annonces</span><span>›</span></div>
+    <div class="menu-row" onclick="openMessagerie()"><span class="l">💬 Ma Messagerie</span><span>›</span></div>
+    <button class="btn ghost" style="margin-top:14px;" onclick="logout()">Se déconnecter</button>
     <button class="btn danger" style="margin-top:10px;" onclick="deleteAccount()">${ozT('del_btn')}</button>
     <div style="text-align:center;margin-top:16px;font-size:12.5px;color:var(--muted);">
       <a href="#" onclick="openExternal(API_BASE+'/privacy.php');return false;" style="color:var(--orange-dark);">${ozT('privacy')}</a> · <a href="#" onclick="openExternal(API_BASE+'/terms.php');return false;" style="color:var(--orange-dark);">${ozT('terms')}</a>
@@ -2282,16 +2148,16 @@ function renderProfilLoggedIn(user){
 
 function renderProfilLoggedOut(){
   document.getElementById('profilContent').innerHTML = `
-    <p style="text-align:center;color:var(--muted);font-size:14px;margin:10px 0 20px;">${t('auth.login_hint')}</p>
-    <div class="field"><label>${t('auth.email')}</label><input id="loginEmail" type="email" placeholder="vous@exemple.com"></div>
-    <div class="field"><label>${t('auth.password')}</label><input id="loginPassword" type="password" placeholder="••••••••"></div>
+    <p style="text-align:center;color:var(--muted);font-size:14px;margin:10px 0 20px;">Connectez-vous pour accéder à votre profil</p>
+    <div class="field"><label>Email</label><input id="loginEmail" type="email" placeholder="vous@exemple.com"></div>
+    <div class="field"><label>Mot de passe</label><input id="loginPassword" type="password" placeholder="••••••••"></div>
     <div id="loginError" style="color:#dc2626;font-size:13px;margin-bottom:10px;"></div>
     <div style="text-align:right;margin:-4px 0 10px;">
-  <a href="#" onclick="openForgotPassword();return false;" style="color:var(--orange-dark);font-size:13px;font-weight:600;">${t('auth.forgot')}</a>
+  <a href="#" onclick="openForgotPassword();return false;" style="color:var(--orange-dark);font-size:13px;font-weight:600;">Mot de passe oublié ?</a>
 </div>
-    <button class="btn" onclick="submitLogin()">${t('auth.login')}</button>
-    <p style="text-align:center;color:var(--muted);font-size:13.5px;margin:18px 0 8px;">${t('auth.no_account')}</p>
-    <button class="btn ghost" onclick="openRegister()" data-i18n="auth.create">Créer un compte</button>
+    <button class="btn" onclick="submitLogin()">Se connecter</button>
+    <p style="text-align:center;color:var(--muted);font-size:13.5px;margin:18px 0 8px;">Pas encore de compte ?</p>
+    <button class="btn ghost" onclick="openRegister()">Créer un compte</button>
   `;
 }
 
@@ -2314,10 +2180,10 @@ async function submitLogin(){
   await checkAuth();
   if(pendingDetailId){ const id = pendingDetailId; pendingDetailId = null; openDetailById(id); }
 } else {
-      errEl.textContent = data.error || t('auth.login_error');
+      errEl.textContent = data.error || 'Connexion impossible.';
     }
   }catch(e){
-    errEl.textContent = t('auth.net');
+    errEl.textContent = 'Erreur de connexion.';
   }
 }
 
@@ -2332,30 +2198,14 @@ async function logout(){
 }
 
 // Chargement initial : catégories, annonces de l'accueil, état de connexion
-function applyNode(r){
-  if(!r || r.nodeType !== 1) return;
-  [r, ...r.querySelectorAll('[data-i18n],[data-i18n-ph]')].forEach(el => {
-    if(el.dataset.i18n){ const v = t(el.dataset.i18n); if(el.textContent !== v) el.textContent = v; }
-    if(el.dataset.i18nPh){ const v = t(el.dataset.i18nPh); if(el.placeholder !== v) el.placeholder = v; }
-  });
-}
-new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(applyNode))).observe(document.body, {childList:true, subtree:true});
-applyI18n();
 renderOza();
 loadCategories();
 loadListings(null, 'homeList');
 checkAuth();
-const h = location.hash.replace('#','');
-if(['deposer','annonces'].includes(h)) go(h);
 // Retour depuis la page de paiement : lien direct vers « Mes annonces »
-if(h === 'mes-annonces'){
+if(location.hash === '#mes-annonces'){
   history.replaceState(null, '', location.pathname + location.search);
   if(localStorage.getItem('oz_sid')) openMesAnnonces();
-}
-</script>
-<script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js', {scope:'./'});
 }
 </script>
 </body>
