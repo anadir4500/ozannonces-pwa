@@ -480,7 +480,7 @@ async function openAdmin(status){
   const tab = (s, k) => `<button class="btn small ${admStatus===s?'':'ghost'}" style="flex:1;" onclick="openAdmin('${s}')">${ozT(k)}</button>`;
   const tabs = `<div style="display:flex;gap:8px;margin-bottom:14px;">${tab('open','adm_open')}${tab('closed','adm_closed')}</div>`;
   try{
-    const d = await apiFetch('/api_admin_reports.php?status=' + admStatus);
+    const d = await apiFetch('/api_admin_reports.php', {method:'POST', body: JSON.stringify({ status: admStatus })});
     if(!d.success){ body.innerHTML = tabs + `<p class="subpage-loading">${escapeHtml(d.error || ozT('adm_forbidden'))}</p>`; return; }
     admReports = d.reports || [];
     if(!admReports.length){ body.innerHTML = tabs + `<p class="subpage-loading">${ozT('adm_none')}</p>`; return; }
