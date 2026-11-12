@@ -458,6 +458,81 @@ async function deleteAccount(){
   }catch(e){ alert(ozT('neterr')); }
 }
 
+/* ===== Espace d'administration : consultation des signalements et interventions ===== */
+Object.assign(OZ_TX.fr, {adm_menu:'Administration', adm_title:'Signalements', adm_open:'À traiter', adm_closed:'Traités',
+  adm_none:'Aucun signalement.', adm_forbidden:'Accès réservé aux administrateurs.', adm_ad:'Annonce', adm_user:'Utilisateur',
+  adm_reports:'signalement(s)', adm_by:'Signalé par', adm_on:'Cible', adm_reason:'Motif', adm_comment:'Commentaire',
+  adm_note:'Note interne (facultatif)', adm_view_ad:'Voir l\'annonce', adm_remove_ad:'Retirer l\'annonce', adm_suspend:'Suspendre l\'utilisateur',
+  adm_unsuspend:'Réactiver l\'utilisateur', adm_dismiss:'Classer sans suite', adm_resolve:'Marquer comme traité',
+  adm_confirm:'Confirmer cette action ?', adm_done:'Action effectuée.', adm_removed:'Annonce retirée', adm_suspended:'Compte suspendu',
+  adm_st_open:'À traiter', adm_st_resolved:'Traité', adm_st_dismissed:'Sans suite', adm_deleted:'(supprimé)'});
+
+let admStatus = 'open', admReports = [];
+function admDate(s){ try{ return new Date(s.replace(' ','T')).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}); }catch(e){ return s||''; } }
+function admTarget(r){
+  if(r.type === 'annonce') return r.annonce_title ? escapeHtml(r.annonce_title) : ozT('adm_deleted');
+  return r.target_user_name ? escapeHtml(r.target_user_name) : ozT('adm_deleted');
+}
+async function openAdmin(status){
+  if(status) admStatus = status;
+  openSubpage(ozT('adm_title'), 'admin');
+  const body = document.getElementById('subpageBody');
+  const tab = (s, k) => `<button class="btn small ${admStatus===s?'':'ghost'}" style="flex:1;" onclick="openAdmin('${s}')">${ozT(k)}</button>`;
+  const tabs = `<div style="display:flex;gap:8px;margin-bottom:14px;">${tab('open','adm_open')}${tab('closed','adm_closed')}</div>`;
+  try{
+    const d = await apiFetch('/api_admin_reports.php?status=' + admStatus);
+    if(!d.success){ body.innerHTML = tabs + `<p class="subpage-loading">${escapeHtml(d.error || ozT('adm_forbidden'))}</p>`; return; }
+    admReports = d.reports || [];
+    if(!admReports.length){ body.innerHTML = tabs + `<p class="subpage-loading">${ozT('adm_none')}</p>`; return; }
+    body.innerHTML = tabs + admReports.map(r => `
+      <div class="menu-row" style="display:block;" onclick="openAdminReport(${Number(r.id)})">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted);">
+          <span>${r.type==='annonce' ? '📋 '+ozT('adm_ad') : '👤 '+ozT('adm_user')} · ${admDate(r.created_at)}</span>
+          ${Number(r.count) > 1 ? `<b style="color:#dc2626;">${Number(r.count)} ${ozT('adm_reports')}</b>` : ''}
+        </div>
+        <div style="font-weight:700;margin:4px 0;">${admTarget(r)}</div>
+        <div style="font-size:13px;color:var(--text);">🚩 ${ozT('r_'+r.reason)}</div>
+      </div>`).join('');
+  }catch(e){ body.innerHTML = tabs + `<p class="subpage-loading">${ozT('neterr')}</p>`; }
+}
+function openAdminReport(id){
+  const r = admReports.find(x => Number(x.id) === Number(id)); if(!r) return;
+  openSubpage(ozT('adm_title') + ' #' + Number(r.id), 'admin-detail');
+  const row = (k, v) => `<div style="margin-bottom:10px;"><div style="font-size:12px;color:var(--muted);">${ozT(k)}</div><div style="font-size:14.5px;">${v}</div></div>`;
+  const isOpen = r.status === 'open';
+  const stLabel = ozT('adm_st_' + r.status);
+  let flags = '';
+  if(r.annonce_removed) flags += `<span style="color:#dc2626;font-weight:700;">⛔ ${ozT('adm_removed')}</span> `;
+  if(r.target_user_suspended) flags += `<span style="color:#dc2626;font-weight:700;">⛔ ${ozT('adm_suspended')}</span>`;
+  const btn = (a, k, cls) => `<button class="btn small ${cls||'ghost'}" style="margin-top:8px;" onclick="admAction(${Number(r.id)},'${a}')">${ozT(k)}</button>`;
+  const actions = isOpen ? `
+    <div class="field" style="margin-top:14px;"><label>${ozT('adm_note')}</label><textarea id="admNote" rows="2" maxlength="500"></textarea></div>
+    ${r.type==='annonce' && r.annonce_id ? `<button class="btn small ghost" onclick="closeSubpage();openDetailById(${Number(r.target_id)})">${ozT('adm_view_ad')}</button>` : ''}
+    ${r.type==='annonce' && !r.annonce_removed ? btn('remove_ad','adm_remove_ad','danger') : ''}
+    ${r.target_user_id ? (r.target_user_suspended ? btn('unsuspend_user','adm_unsuspend') : btn('suspend_user','adm_suspend','danger')) : ''}
+    ${btn('dismiss','adm_dismiss')}
+    ${btn('resolve','adm_resolve','')}` : (r.admin_note ? row('adm_note', escapeHtml(r.admin_note)) : '');
+  document.getElementById('subpageBody').innerHTML = `
+    ${row('adm_on', (r.type==='annonce' ? '📋 ' : '👤 ') + admTarget(r) + ' <span style="color:var(--muted);">#' + Number(r.target_id) + '</span>')}
+    ${row('adm_reason', '🚩 ' + ozT('r_' + r.reason))}
+    ${r.comment ? row('adm_comment', escapeHtml(r.comment)) : ''}
+    ${row('adm_by', escapeHtml(r.reporter_name || '—') + ' · ' + admDate(r.created_at))}
+    ${Number(r.count) > 1 ? row('adm_reports', '<b style="color:#dc2626;">' + Number(r.count) + '</b>') : ''}
+    ${row('adm_title', stLabel)}
+    ${flags ? `<div style="margin-bottom:6px;">${flags}</div>` : ''}
+    ${actions}`;
+}
+async function admAction(id, action){
+  const destructive = ['remove_ad','suspend_user'].includes(action);
+  if(destructive && !confirm(ozT('adm_confirm'))) return;
+  const note = document.getElementById('admNote');
+  try{
+    const d = await apiFetch('/api_admin_action.php', {method:'POST', body: JSON.stringify({ report_id: id, action: action, note: note ? note.value.trim() : '' })});
+    if(d.success){ alert(ozT('adm_done')); openAdmin(); }
+    else alert(d.error || ozT('err'));
+  }catch(e){ alert(ozT('neterr')); }
+}
+
 // Les cookies tiers étant bloqués par les WebView, on renvoie l'ID de session en en-tête
 const _origFetch = window.fetch.bind(window);
 window.fetch = function(url, opts){
@@ -963,7 +1038,7 @@ function contactSeller(){
 /* ================================================================
    SOUS-PAGES NATIVES : Profil / Mes annonces / Messagerie / Espace pro
    ================================================================ */
-let subpageMode = null; // 'profile' | 'ads-list' | 'ads-edit' | 'msg-list' | 'msg-chat' | 'pro'
+let subpageMode = null; // 'admin' | 'admin-detail' | 'profile' | 'ads-list' | 'ads-edit' | 'msg-list' | 'msg-chat' | 'pro'
 
 function openSubpage(title, mode){
   document.getElementById('subpageTitle').textContent = title;
@@ -980,6 +1055,7 @@ function closeSubpage(){
 function subpageBack(){
   if(subpageMode === 'ads-edit'){ openMesAnnonces(); }
   else if(subpageMode === 'msg-chat'){ openMessagerie(); }
+  else if(subpageMode === 'admin-detail'){ openAdmin(); }
   else if(subpageMode === 'report'){ if(reportReturn) reportReturn(); else closeSubpage(); }
   else { closeSubpage(); } // couvre aussi 'msg-chat-standalone' (retour vers la fiche annonce)
 }
@@ -2138,6 +2214,7 @@ function renderProfilLoggedIn(user){
     <div class="menu-row" onclick="openEspacePro()"><span class="l">🏪 Mon espace pro</span><span>›</span></div>
     <div class="menu-row" onclick="openMesAnnonces()"><span class="l">📋 Mes annonces</span><span>›</span></div>
     <div class="menu-row" onclick="openMessagerie()"><span class="l">💬 Ma Messagerie</span><span>›</span></div>
+    ${user.is_admin ? `<div class="menu-row" onclick="openAdmin('open')"><span class="l">🛡️ ${ozT('adm_menu')}</span><span>›</span></div>` : ''}
     <button class="btn ghost" style="margin-top:14px;" onclick="logout()">Se déconnecter</button>
     <button class="btn danger" style="margin-top:10px;" onclick="deleteAccount()">${ozT('del_btn')}</button>
     <div style="text-align:center;margin-top:16px;font-size:12.5px;color:var(--muted);">
